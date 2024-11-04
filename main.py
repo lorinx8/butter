@@ -34,3 +34,12 @@ app = FastAPI(
 app.include_router(hello.router, prefix=settings.API_V1_STR) 
 app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=settings.API_V1_STR)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True  # 开发模式下启用热重载
+    )
