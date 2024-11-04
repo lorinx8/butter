@@ -22,13 +22,13 @@ wheels/
 MANIFEST
 
 # Virtual Environment
-venv/
-env/
-ENV/
-.env
-.venv
-env.bak/
-venv.bak/
+# venv/
+# env/
+# ENV/
+# .env
+# .venv
+# env.bak/
+# venv.bak/
 
 # IDE - VSCode
 .vscode/
@@ -86,7 +86,3 @@ dmypy.json
 .env
 .env.local
 .env.*.local
-
-# 数据库
-*.db
-*.sqlite3
