@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from pathlib import Path
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.v1.endpoints import users, chat
+from app.api.v1.endpoints import hello, users, chat
 from app.core.database import engine
 from app.repositories import models
 
@@ -31,5 +31,6 @@ app = FastAPI(
 )
 
 # 包含路由
+app.include_router(hello.router, prefix=settings.API_V1_STR) 
 app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=settings.API_V1_STR)

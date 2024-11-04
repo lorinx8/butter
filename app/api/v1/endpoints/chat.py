@@ -14,7 +14,6 @@ def get_chat_service():
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     chat_request: ChatRequest,
-    token: dict = Depends(verify_token),
     chat_service: ChatService = Depends(get_chat_service)
 ):
     response = chat_service.chat(
@@ -22,10 +21,9 @@ async def chat(
     )
     return {"message": response} 
 
-@router.post("/chat_stream", response_model=ChatResponse)
+@router.post("/chat/stream", response_model=ChatResponse)
 async def chat_stream(
     chat_request: ChatRequest,
-    token: dict = Depends(verify_token),
     chat_service: ChatService = Depends(get_chat_service)
 ):
     async def generate():
