@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     # 数据库配置
     DATABASE_URL: Optional[str] = None
 
+    # OpenAI API Key
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_BASE_URL: Optional[str] = None
+
     class Config:
         env_file = ".env"
 
