@@ -1,3 +1,4 @@
+import json
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START
 from langchain_core.messages import HumanMessage
@@ -20,15 +21,26 @@ class ChatService:
             temperature=0,
             max_tokens=None,    
             timeout=None,
+            streaming=True,
             max_retries=2,)
 
     # Define the function that calls the model
     def __call_model(self, state: MessagesState):
         messages = state['messages']
-        logger.info(messages)
+        logger.info(f'messages count: {len(messages)}')
         response = self.model.invoke(messages)
         return {"messages": [response]}
-
-    def chat(self,  message_content: str) -> str:
-        final_state = self.app.invoke({"messages": [HumanMessage(content=message_content)]}, {"configurable": {"thread_id": "42"}})  
+    
+    def chat(self, message_content: str) -> str:
+        input_message = HumanMessage(content=message_content)
+        final_state = self.app.invoke({"messages": input_message}, {"configurable": {"thread_id": "42"}})  
         return final_state["messages"][-1].content
+
+    async def chat_stream(self,  message_content: str):
+        input_message = HumanMessage(content=message_content)
+        async for msg in self.app.astream({"messages": [input_message]}, stream_mode="messages", config={"configurable": {"thread_id": "42"}}):
+            yield json.dumps({"content": msg.content})
+        yield "_[END]_"
+        
+    
+
