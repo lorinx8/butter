@@ -5,6 +5,7 @@ passlib>=1.7.4
 bcrypt>=4.2.0
 python-jose>=3.3.0
 email-validator>=2.2.0
+langgraph>=0.2.44
 langchain_openai>=0.2.5
 pydantic-settings>=2.6.1
 loguru>=0.7.2
