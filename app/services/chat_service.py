@@ -38,6 +38,6 @@ class ChatService:
 
     async def chat_stream(self,  message_content: str):
         input_message = HumanMessage(content=message_content)
-        async for msg in self.app.astream({"messages": [input_message]}, stream_mode="messages", config={"configurable": {"thread_id": "42"}}):
+        async for msg, _ in self.app.astream({"messages": [input_message]}, stream_mode="messages", config={"configurable": {"thread_id": "42"}}):
             yield json.dumps({"content": msg.content})
-        yield "_[END]_"
+        yield json.dumps({"content": "[END]"})
