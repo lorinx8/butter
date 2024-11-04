@@ -41,6 +41,3 @@ class ChatService:
         async for msg in self.app.astream({"messages": [input_message]}, stream_mode="messages", config={"configurable": {"thread_id": "42"}}):
             yield json.dumps({"content": msg.content})
         yield "_[END]_"
-        
-    
-
