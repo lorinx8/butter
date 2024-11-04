@@ -4,9 +4,11 @@ from app.services.chat_service import ChatService
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter()
+# 创建一个全局的 ChatService 实例
+chat_service = ChatService()
 
 def get_chat_service():
-    return ChatService()
+    return chat_service
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
