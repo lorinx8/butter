@@ -2,17 +2,26 @@ import json
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
-from app.core.config import settings
+from langgraph.checkpoint.postgres import PostgresSaver
+from psycopg import Connection
 from loguru import logger
 
+from app.core.config import settings
+
+connection_kwargs = {
+    "autocommit": True,
+    "prepare_threshold": 0,
+}
 class ChatService:
     def __init__(self):
         self.workflow = StateGraph(MessagesState)
         self.workflow.add_node("call_model", self.__call_model)
         self.workflow.add_edge(START, "call_model")
-        self.memory = MemorySaver()
-        self.app = self.workflow.compile(checkpointer=self.memory)   
+
+        self.conn = Connection.connect(settings.DATABASE_URI, **connection_kwargs)
+        self.checkpoint = PostgresSaver(self.conn)
+        self.checkpoint.setup()
+        self.app = self.workflow.compile(checkpointer=self.checkpoint)   
 
         self.model = ChatOpenAI(
             base_url=settings.OPENAI_BASE_URL,

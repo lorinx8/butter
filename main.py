@@ -15,9 +15,6 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 确保数据库目录存在
-    db_path = Path("./data")
-    db_path.mkdir(parents=True, exist_ok=True)
     # Startup
     logger.info("Application startup")
     yield
