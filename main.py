@@ -6,6 +6,7 @@ from app.core.logging import setup_logging
 from app.api.v1.endpoints import hello, prompts, users, chat
 from app.core.database import engine
 from app.repositories import models
+from app.middleware.access_log import access_log_middleware
 
 # 创建数据库表
 models.Base.metadata.create_all(bind=engine)
@@ -27,6 +28,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# 添加访问日志中间件
+app.middleware("http")(access_log_middleware)
+
 # 包含路由
 app.include_router(hello.router, prefix=settings.API_V1_STR) 
 app.include_router(users.router, prefix=settings.API_V1_STR)
@@ -39,5 +43,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True  # 开发模式下启用热重载
+        reload=True,  # 开发模式下启用热重载
+        access_log=False
     )
