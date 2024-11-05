@@ -86,3 +86,8 @@ dmypy.json
 # .env
 .env.local
 .env.*.local
+
+# 数据库
+*.db
+*.sqlite3
+postgres-data/

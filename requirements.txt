@@ -9,3 +9,4 @@ langgraph>=0.2.44
 langchain_openai>=0.2.5
 pydantic-settings>=2.6.1
 loguru>=0.7.2
+psycopg2-binary>=2.9.10
