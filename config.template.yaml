@@ -1,0 +1,24 @@
+app:
+  name: "FastAPI Project"
+  api_version: "v1"
+  api_prefix: "/api/v1"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  database: "butter"
+
+openai:
+  api_key: ""
+  base_url: ""
+  model: "gpt-4"
+  temperature: 0
+  max_tokens: 16000
+  max_retries: 2
+
+jwt:
+  secret_key: "your-secret-key-here"
+  algorithm: "HS256"
+  access_token_expire_minutes: 30 

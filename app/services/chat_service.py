@@ -21,7 +21,7 @@ connection_kwargs = {
 @singleton
 class ChatService:
     def __init__(self, db: Session = Depends(get_db)):
-        self.model_name = "gpt-4o"
+        self.model_name = settings.OPENAI_MODEL
         self.workflow = StateGraph(MessagesState)
         self.workflow.add_node("call_model", self.__call_model)
         self.workflow.add_edge(START, "call_model")
@@ -34,12 +34,11 @@ class ChatService:
         self.model = ChatOpenAI(
             base_url=settings.OPENAI_BASE_URL,
             api_key=settings.OPENAI_API_KEY,
-            model=self.model_name,
-            temperature=0,
-            max_tokens=16000,    
-            timeout=None,
-            streaming=True,
-            max_retries=2,)
+            model=settings.OPENAI_MODEL,
+            temperature=settings.OPENAI_TEMPERATURE,
+            max_tokens=settings.OPENAI_MAX_TOKENS,    
+            max_retries=settings.OPENAI_MAX_RETRIES,
+        )
         
         self.prompt_repository = PromptRepository(db)
 
