@@ -49,17 +49,3 @@ async def delete_prompt(
 ):
     prompt_service.delete_prompt(prompt_id)
     return {"message": "Prompt deleted successfully"}
-
-@router.post("/prompts/refresh-cache")
-async def refresh_cache(
-    prompt_id: str = None,
-    prompt_service: PromptService = Depends(get_prompt_service)
-):
-    prompt_service.refresh_cache(prompt_id)
-    return {"message": "Cache refreshed successfully"}
-
-@router.get("/prompts/cache/all", response_model=List[ChatPromptInDB])
-async def get_cached_prompts(
-    prompt_service: PromptService = Depends(get_prompt_service)
-):
-    return prompt_service.get_cached_prompts()

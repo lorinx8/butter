@@ -1,14 +1,17 @@
 import json
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, trim_messages
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg import Connection
 from loguru import logger
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.services.prompt_cache_service import PromptCacheService
 from app.utils import singleton
+from app.repositories.prompt_repository import PromptRepository
+from app.core.database import get_db
 
 connection_kwargs = {
     "autocommit": True,
@@ -17,7 +20,8 @@ connection_kwargs = {
 
 @singleton
 class ChatService:
-    def __init__(self):
+    def __init__(self, db: Session = Depends(get_db)):
+        self.model_name = "gpt-4o"
         self.workflow = StateGraph(MessagesState)
         self.workflow.add_node("call_model", self.__call_model)
         self.workflow.add_edge(START, "call_model")
@@ -30,33 +34,42 @@ class ChatService:
         self.model = ChatOpenAI(
             base_url=settings.OPENAI_BASE_URL,
             api_key=settings.OPENAI_API_KEY,
-            model="gpt-4o",
+            model=self.model_name,
             temperature=0,
-            max_tokens=None,    
+            max_tokens=16000,    
             timeout=None,
             streaming=True,
             max_retries=2,)
         
-        self.prompt_cache_service = PromptCacheService()
+        self.prompt_repository = PromptRepository(db)
 
     # Define the function that calls the model
     def __call_model(self, state: MessagesState, config: dict):
-        logger.info(f'call_model: {config}')
         prompt_id = config.get("metadata").get("prompt_id") 
         messages = state['messages']
         # 判断从历史状态中来的消息中，第一条是不是系统消息
         if not messages or not isinstance(messages[0], SystemMessage):
             # 构建系统消息
-            system_message = SystemMessage(content=self.__find_prompt(prompt_id))
-            messages = [system_message] + (messages if isinstance(messages, list) else [messages])
+            prompt = self.__find_prompt(prompt_id)
+            if not prompt or prompt == "":
+                logger.warning(f'prompt not found: {prompt_id}')
+            else:
+                system_message = SystemMessage(content=prompt)
+                messages = [system_message] + (messages if isinstance(messages, list) else [messages])
+        messages = trim_messages(messages, 
+                                 strategy="last",
+                                 token_counter=self.model,
+                                 max_tokens=self.model.max_tokens, 
+                                 include_system=True, 
+                                 start_on="human",
+                                 end_on=("human", "tool"),)
         response = self.model.invoke(messages)
         return {"messages": [response]}
     
     # 从缓存中查找系统提示词
     def __find_prompt(self, prompt_id: str) -> str:
-        logger.info(f'find prompt: {prompt_id}')
-        prompt = self.prompt_cache_service.get(prompt_id)
-        return prompt.content
+        prompt = self.prompt_repository.get_by_id(prompt_id)
+        return prompt.content if prompt else ""
     
     # 聊天(非流式)
     # prompt_id: 提示词ID
