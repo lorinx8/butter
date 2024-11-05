@@ -17,7 +17,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
 
-class ChatPrompt(Base):
+class Prompt(Base):
     __tablename__ = "prompts"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)

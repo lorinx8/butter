@@ -5,11 +5,9 @@ from app.services.chat_service import ChatService
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter()
-# 创建一个全局的 ChatService 实例
-chat_service = ChatService()
 
 def get_chat_service():
-    return chat_service
+    return ChatService()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
@@ -17,6 +15,8 @@ async def chat(
     chat_service: ChatService = Depends(get_chat_service)
 ):
     response = chat_service.chat(
+        prompt_id=chat_request.prompt_id,
+        session_id=chat_request.session_id, 
         message_content=chat_request.message_content
     )
     return {"message": response} 
@@ -27,7 +27,11 @@ async def chat_stream(
     chat_service: ChatService = Depends(get_chat_service)
 ):
     async def generate():
-        async for chunk in chat_service.chat_stream(chat_request.message_content):
+        async for chunk in chat_service.chat_stream(
+            prompt_id=chat_request.prompt_id,
+            session_id=chat_request.session_id,
+            message_content=chat_request.message_content
+        ):
             # 确保每个chunk都是JSON格式，并以换行符结尾
             yield f"data: {chunk}\n\n"
     return StreamingResponse(generate(), media_type="text/event-stream")

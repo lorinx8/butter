@@ -3,12 +3,12 @@ from typing import List, Optional
 from . import models
 from sqlalchemy import or_
 
-class ChatPromptRepository:
+class PromptRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, name: str, content: str, description: Optional[str] = None) -> models.ChatPrompt:
-        db_prompt = models.ChatPrompt(
+    def create(self, name: str, content: str, description: Optional[str] = None) -> models.Prompt:
+        db_prompt = models.Prompt(
             name=name,
             content=content,
             description=description
@@ -18,13 +18,13 @@ class ChatPromptRepository:
         self.db.refresh(db_prompt)
         return db_prompt
 
-    def get_by_id(self, prompt_id: str) -> Optional[models.ChatPrompt]:
-        return self.db.query(models.ChatPrompt).filter(models.ChatPrompt.id == prompt_id).first()
+    def get_by_id(self, prompt_id: str) -> Optional[models.Prompt]:
+        return self.db.query(models.Prompt).filter(models.Prompt.id == prompt_id).first()
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[models.ChatPrompt]:
-        return self.db.query(models.ChatPrompt).offset(skip).limit(limit).all()
+    def get_all(self, skip: int = 0, limit: int = 100) -> List[models.Prompt]:
+        return self.db.query(models.Prompt).offset(skip).limit(limit).all()
 
-    def update(self, prompt_id: str, **kwargs) -> Optional[models.ChatPrompt]:
+    def update(self, prompt_id: str, **kwargs) -> Optional[models.Prompt]:
         prompt = self.get_by_id(prompt_id)
         if prompt:
             for key, value in kwargs.items():
@@ -41,10 +41,10 @@ class ChatPromptRepository:
             return True
         return False
 
-    def search(self, query: str) -> List[models.ChatPrompt]:
-        return self.db.query(models.ChatPrompt).filter(
+    def search(self, query: str) -> List[models.Prompt]:
+        return self.db.query(models.Prompt).filter(
             or_(
-                models.ChatPrompt.name.ilike(f"%{query}%"),
-                models.ChatPrompt.description.ilike(f"%{query}%")
+                models.Prompt.name.ilike(f"%{query}%"),
+                models.Prompt.description.ilike(f"%{query}%")
             )
         ).all()

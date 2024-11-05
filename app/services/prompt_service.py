@@ -1,16 +1,18 @@
 from typing import List, Optional
 from fastapi import HTTPException
-from app.repositories.prompt_repository import ChatPromptRepository
+from app.repositories.prompt_repository import PromptRepository
 from app.schemas.chat_prompt import ChatPromptCreate, ChatPromptUpdate
 from app.services.prompt_cache_service import PromptCacheService
-from app.repositories.models import ChatPrompt
+from app.repositories.models import Prompt
 
-class ChatPromptService:
-    def __init__(self, prompt_repository: ChatPromptRepository):
+class PromptService:
+    def __init__(self, prompt_repository: PromptRepository):
         self.prompt_repository = prompt_repository
         self.cache_service = PromptCacheService()
 
-    def create_prompt(self, prompt_data: ChatPromptCreate) -> ChatPrompt:
+        self.refresh_cache()
+
+    def create_prompt(self, prompt_data: ChatPromptCreate) -> Prompt:
         prompt = self.prompt_repository.create(
             name=prompt_data.name,
             content=prompt_data.content,
@@ -19,7 +21,7 @@ class ChatPromptService:
         self.cache_service.set(prompt)
         return prompt
 
-    def get_prompt(self, prompt_id: str) -> Optional[ChatPrompt]:
+    def get_prompt(self, prompt_id: str) -> Optional[Prompt]:
         # First try cache
         prompt = self.cache_service.get(prompt_id)
         if prompt:
@@ -34,10 +36,10 @@ class ChatPromptService:
         self.cache_service.set(prompt)
         return prompt
 
-    def get_prompts(self, skip: int = 0, limit: int = 100) -> List[ChatPrompt]:
+    def get_prompts(self, skip: int = 0, limit: int = 100) -> List[Prompt]:
         return self.prompt_repository.get_all(skip=skip, limit=limit)
 
-    def update_prompt(self, prompt_id: str, prompt_data: ChatPromptUpdate) -> ChatPrompt:
+    def update_prompt(self, prompt_id: str, prompt_data: ChatPromptUpdate) -> Prompt:
         update_data = prompt_data.model_dump(exclude_unset=True)
         prompt = self.prompt_repository.update(prompt_id, **update_data)
         if not prompt:
@@ -62,5 +64,5 @@ class ChatPromptService:
             for prompt in prompts:
                 self.cache_service.set(prompt)
 
-    def get_cached_prompts(self) -> List[ChatPrompt]:
+    def get_cached_prompts(self) -> List[Prompt]:
         return self.cache_service.get_all()

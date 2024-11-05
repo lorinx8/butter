@@ -1,11 +1,11 @@
 from typing import Dict, Optional, List
-from app.repositories.models import ChatPrompt
+from app.repositories.models import Prompt
 from threading import Lock
 
 class PromptCacheService:
     _instance = None
     _lock = Lock()
-    _cache: Dict[str, ChatPrompt]
+    _cache: Dict[str, Prompt]
 
     def __new__(cls):
         with cls._lock:
@@ -14,10 +14,10 @@ class PromptCacheService:
                 cls._instance._cache = {}
             return cls._instance
 
-    def get(self, prompt_id: str) -> Optional[ChatPrompt]:
+    def get(self, prompt_id: str) -> Optional[Prompt]:
         return self._cache.get(prompt_id)
 
-    def set(self, prompt: ChatPrompt) -> None:
+    def set(self, prompt: Prompt) -> None:
         self._cache[prompt.id] = prompt
 
     def delete(self, prompt_id: str) -> None:
@@ -26,8 +26,8 @@ class PromptCacheService:
     def clear(self) -> None:
         self._cache.clear()
 
-    def get_all(self) -> List[ChatPrompt]:
+    def get_all(self) -> List[Prompt]:
         return list(self._cache.values())
 
-    def refresh_prompt(self, prompt: ChatPrompt) -> None:
+    def refresh_prompt(self, prompt: Prompt) -> None:
         self.set(prompt)
