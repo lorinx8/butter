@@ -28,7 +28,7 @@ async def get_users(
 
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
-    user_id: int,
+    user_id: str,
     token: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):
@@ -36,7 +36,7 @@ async def get_user(
 
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: int,
+    user_id: str,
     user_data: UserUpdate,
     token: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
@@ -45,7 +45,7 @@ async def update_user(
 
 @router.delete("/users/{user_id}")
 async def delete_user(
-    user_id: int,
+    user_id: str,
     token: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):

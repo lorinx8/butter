@@ -19,7 +19,7 @@ class UserRepository:
         self.db.refresh(db_user)
         return db_user
 
-    def get_by_id(self, user_id: int) -> Optional[models.User]:
+    def get_by_id(self, user_id: str) -> Optional[models.User]:
         return self.db.query(models.User).filter(models.User.id == user_id).first()
 
     def get_by_email(self, email: str) -> Optional[models.User]:
@@ -28,7 +28,7 @@ class UserRepository:
     def get_all(self) -> List[models.User]:
         return self.db.query(models.User).all()
 
-    def update(self, user_id: int, **kwargs) -> Optional[models.User]:
+    def update(self, user_id: str, **kwargs) -> Optional[models.User]:
         user = self.get_by_id(user_id)
         if user:
             for key, value in kwargs.items():
@@ -40,7 +40,7 @@ class UserRepository:
             self.db.refresh(user)
         return user
 
-    def delete(self, user_id: int) -> bool:
+    def delete(self, user_id: str) -> bool:
         user = self.get_by_id(user_id)
         if user:
             self.db.delete(user)

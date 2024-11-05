@@ -21,7 +21,7 @@ class UserService:
         )
         return UserInDB.from_orm(user)
 
-    def get_user(self, user_id: int) -> Optional[UserInDB]:
+    def get_user(self, user_id: str) -> Optional[UserInDB]:
         user = self.user_repository.get_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -31,14 +31,14 @@ class UserService:
         users = self.user_repository.get_all()
         return [UserInDB.from_orm(user) for user in users]
 
-    def update_user(self, user_id: int, user_data: UserUpdate) -> UserInDB:
+    def update_user(self, user_id: str, user_data: UserUpdate) -> UserInDB:
         update_data = user_data.dict(exclude_unset=True)
         user = self.user_repository.update(user_id, **update_data)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return UserInDB.from_orm(user)
 
-    def delete_user(self, user_id: int) -> bool:
+    def delete_user(self, user_id: str) -> bool:
         if not self.user_repository.delete(user_id):
             raise HTTPException(status_code=404, detail="User not found")
         return True 
