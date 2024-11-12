@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from functools import lru_cache
-from . import models
 from sqlalchemy import or_
+from app.repositories import models
 
 class PromptRepository:
+    
     def __init__(self, db: Session):
         self.db = db
 

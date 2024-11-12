@@ -27,9 +27,11 @@ class Settings(BaseSettings):
     # Load YAML config
     _yaml_config = load_yaml_config()
     
-    # API Settings
-    API_V1_STR: str = _yaml_config['app']['api_prefix']
     PROJECT_NAME: str = _yaml_config['app']['name']
+    # API Settings
+    APP_API_V1_STR: str = _yaml_config['app']['api_prefixs']['app']
+    ADMIN_API_V1_STR: str = _yaml_config['app']['api_prefixs']['admin']
+    COMMON_API_V1_STR: str = _yaml_config['app']['api_prefixs']['common']
     
     # JWT Settings
     SECRET_KEY: str = _yaml_config['jwt']['secret_key']

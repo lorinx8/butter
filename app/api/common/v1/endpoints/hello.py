@@ -4,11 +4,11 @@ import os
 
 router = APIRouter()
 
-@router.get("/hello")
-async def hello():
-    return "hello"
+@router.get("/hello-echo/{message}")
+async def hello_echo(message: str):
+    return f"echo: {message}" 
 
-@router.get("/serverInfo")
+@router.get("/server-info")
 async def get_server_info():
     server_info = {
         "os": platform.system(),

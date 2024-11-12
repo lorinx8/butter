@@ -2,21 +2,21 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class ChatPromptBase(BaseModel):
+class PromptBase(BaseModel):
     name: str
     content: str
     description: Optional[str] = None
 
-class ChatPromptCreate(ChatPromptBase):
+class PromptCreate(PromptBase):
     pass
 
-class ChatPromptUpdate(BaseModel):
+class PromptUpdate(BaseModel):
     name: Optional[str] = None
     content: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
 
-class ChatPromptInDB(ChatPromptBase):
+class PromptInDB(PromptBase):
     id: str
     is_active: bool
     created_at: datetime

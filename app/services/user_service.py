@@ -1,13 +1,13 @@
 from typing import List, Optional
 from fastapi import HTTPException
-from app.repositories.user_repository import UserRepository
+from app.repositories.admin_user_repository import AdminUserRepository
 from app.schemas.user import UserCreate, UserUpdate, UserInDB
 from datetime import timedelta
 from app.core.security import verify_password, create_access_token
 from app.core.config import settings
 
 class UserService:
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: AdminUserRepository):
         self.user_repository = user_repository
 
     def create_user(self, user_data: UserCreate) -> UserInDB:
