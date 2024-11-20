@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from pathlib import Path
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.v1.endpoints import hello, prompts, users, chat
+from app.api.admin import routes as admin_routes
+from app.api.common import routes as common_routes
 from app.core.database import engine
 from app.repositories import models
 from app.middleware.access_log import access_log_middleware
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url="/api/openapi.json",
     lifespan=lifespan
 )
 
@@ -32,10 +33,8 @@ app = FastAPI(
 app.middleware("http")(access_log_middleware)
 
 # 包含路由
-app.include_router(hello.router, prefix=settings.API_V1_STR) 
-app.include_router(users.router, prefix=settings.API_V1_STR)
-app.include_router(chat.router, prefix=settings.API_V1_STR)
-app.include_router(prompts.router, prefix=settings.API_V1_STR)
+app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR) 
+app.include_router(common_routes.router, prefix=settings.COMMON_API_V1_STR)
 
 if __name__ == "__main__":
     import uvicorn

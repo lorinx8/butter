@@ -94,3 +94,6 @@ dmypy.json
 *.db
 *.sqlite3
 postgres-data/
+
+# Cursor
+.cursorrules

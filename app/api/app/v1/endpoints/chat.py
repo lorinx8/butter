@@ -1,3 +1,17 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+@file: chat.py
+@brief: 该文件包含普通推理完成相关 API 端点和服务逻辑。
+@details:
+    - 提供了一次性推理和流式推理的接口。
+    - 提示词等需要由调用方提供。
+    - 不提供历史会话功能。
+@date: 2024-10-28
+@author: bukp
+@version: 1.0
+"""
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -11,7 +25,7 @@ router = APIRouter()
 def get_chat_service(db: Session = Depends(get_db)):
     return ChatService(db)
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat/completions", response_model=ChatResponse)
 async def chat(
     chat_request: ChatRequest,
     chat_service: ChatService = Depends(get_chat_service)
