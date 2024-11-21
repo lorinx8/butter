@@ -6,13 +6,6 @@ app:
     admin: "/api/admin/v1"
     common: "/api/common/v1"
 
-database:
-  host: "aws-0-ap-southeast-1.pooler.supabase.com"
-  port: 6543
-  user: "postgres.ldhzcbggdqciydmruwqf"
-  password: "Devdevdev@223"
-  database: "postgres"
-
 openai:
   api_key: "b6107211-b6bf-401d-885d-9e30856b8ab9"
   base_url: "https://ark.cn-beijing.volces.com/api/v3"
