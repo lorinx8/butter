@@ -102,7 +102,7 @@ class Settings(BaseSettings):
         """获取uvicorn端口"""
         port = os.getenv("PORT")
         if port:
-            return safe_int(port)
+            return safe_int(port, 8000)
         else:
             return safe_int(
                 get_yaml_value(self._yaml_config, 'app', 'uvicorn_port'), 8000)

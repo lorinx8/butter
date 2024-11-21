@@ -6,6 +6,7 @@ from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
 from app.core.database import init_db
 from app.middleware.access_log import access_log_middleware
+from fastapi.middleware.cors import CORSMiddleware
 
 # 检查数据库配置
 settings.check_database_config()
@@ -27,6 +28,15 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url="/api/openapi.json",
     lifespan=lifespan
+)
+
+# 添加 CORS 中间件配置
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许所有源，生产环境建议设置具体的源
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许所有方法
+    allow_headers=["*"],  # 允许所有头
 )
 
 # 添加访问日志中间件
