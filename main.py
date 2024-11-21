@@ -9,11 +9,12 @@ from app.core.database import engine
 from app.repositories import models
 from app.middleware.access_log import access_log_middleware
 
-# 创建数据库表
-models.Base.metadata.create_all(bind=engine)
+# 检查数据库配置
+settings.check_database_config()
 
 # 设置日志
 logger = setup_logging()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,7 +34,7 @@ app = FastAPI(
 app.middleware("http")(access_log_middleware)
 
 # 包含路由
-app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR) 
+app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR)
 app.include_router(common_routes.router, prefix=settings.COMMON_API_V1_STR)
 
 if __name__ == "__main__":
@@ -42,6 +43,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,  # 开发模式下启用热重载
+        reload=False,  # 开发模式下启用热重载
         access_log=False
     )

@@ -29,11 +29,8 @@ AsyncSessionLocal = sessionmaker(
     expire_on_commit=False
 )
 
-print(settings.DATABASE_URL_PSYCOPG)
 
 # 同步依赖
-
-
 def get_db():
     db = SessionLocal()
     try:
@@ -41,9 +38,8 @@ def get_db():
     finally:
         db.close()
 
+
 # 异步依赖
-
-
 async def get_async_db():
     async with AsyncSessionLocal() as session:
         try:
