@@ -1,5 +1,6 @@
 app:
   name: "Hi! This is Butter!"
+  uvicorn_port: 8000
   app_version: "v1"
   api_prefixs:
     app: "/api/v1"
