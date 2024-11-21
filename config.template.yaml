@@ -1,7 +1,11 @@
 app:
-  name: "FastAPI Project"
+  name: "Hi! This is Butter!"
+  uvicorn_port: 8000
   api_version: "v1"
-  api_prefix: "/api/v1"
+  api_prefix:
+    app: "/api/v1"
+    admin: "/api/admin/v1"
+    common: "/api/common/v1"
 
 database:
   host: "localhost"
@@ -21,4 +25,4 @@ openai:
 jwt:
   secret_key: "your-secret-key-here"
   algorithm: "HS256"
-  access_token_expire_minutes: 30 
+  access_token_expire_minutes: 30

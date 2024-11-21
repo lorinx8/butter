@@ -98,6 +98,16 @@ class Settings(BaseSettings):
         _yaml_config, 'openai', 'max_retries'), 2)
 
     @property
+    def UVICORN_PORT(self) -> int:
+        """获取uvicorn端口"""
+        port = os.getenv("PORT")
+        if port:
+            return safe_int(port)
+        else:
+            return safe_int(
+                get_yaml_value(self._yaml_config, 'app', 'uvicorn_port'), 8000)
+
+    @property
     def DATABASE_URL(self) -> str:
         """获取数据库URL"""
         # 优先使用环境变量

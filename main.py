@@ -1,12 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from pathlib import Path
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
-from app.core.database import engine
-from app.repositories import models
+from app.core.database import init_db
 from app.middleware.access_log import access_log_middleware
 
 # 检查数据库配置
@@ -20,6 +18,7 @@ logger = setup_logging()
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Application startup")
+    await init_db()
     yield
     # Shutdown
     logger.info("Application shutdown")
@@ -42,7 +41,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=settings.UVICORN_PORT,
         reload=False,  # 开发模式下启用热重载
         access_log=False
     )
