@@ -30,31 +30,45 @@ class Settings(BaseSettings):
     # Load YAML config
     _yaml_config = load_yaml_config()
 
-    PROJECT_NAME: str = _yaml_config['app']['name']
+    # 安全获取嵌套的yaml配置
+    def _get_yaml_value(self, *keys, default='') -> str:
+        current = self._yaml_config
+        for key in keys:
+            if not isinstance(current, dict):
+                return default
+            current = current.get(key, default)
+        return current if current is not None else default
+
+    PROJECT_NAME: str = _get_yaml_value('app', 'name')
+
     # API Settings
-    APP_API_V1_STR: str = _yaml_config['app']['api_prefixs']['app']
-    ADMIN_API_V1_STR: str = _yaml_config['app']['api_prefixs']['admin']
-    COMMON_API_V1_STR: str = _yaml_config['app']['api_prefixs']['common']
+    APP_API_V1_STR: str = _get_yaml_value('app', 'api_prefixs', 'app')
+    ADMIN_API_V1_STR: str = _get_yaml_value('app', 'api_prefixs', 'admin')
+    COMMON_API_V1_STR: str = _get_yaml_value('app', 'api_prefixs', 'common')
 
     # JWT Settings
-    SECRET_KEY: str = _yaml_config['jwt']['secret_key']
-    ALGORITHM: str = _yaml_config['jwt']['algorithm']
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = _yaml_config['jwt']['access_token_expire_minutes']
+    SECRET_KEY: str = _get_yaml_value('jwt', 'secret_key')
+    ALGORITHM: str = _get_yaml_value('jwt', 'algorithm')
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+        _get_yaml_value('jwt', 'access_token_expire_minutes', '30'))
 
     # Database Settings
-    POSTGRES_SERVER: str = _yaml_config['database']['host']
-    POSTGRES_USER: str = _yaml_config['database']['user']
-    POSTGRES_PASSWORD: str = _yaml_config['database']['password']
-    POSTGRES_DB: str = _yaml_config['database']['database']
-    POSTGRES_PORT: str = str(_yaml_config['database']['port'])
+    POSTGRES_SERVER: str = _get_yaml_value('database', 'host')
+    POSTGRES_USER: str = _get_yaml_value('database', 'user')
+    POSTGRES_PASSWORD: str = _get_yaml_value('database', 'password')
+    POSTGRES_DB: str = _get_yaml_value('database', 'database')
+    POSTGRES_PORT: str = str(_get_yaml_value('database', 'port', '5432'))
 
     # OpenAI Settings
-    OPENAI_API_KEY: Optional[str] = _yaml_config['openai']['api_key']
-    OPENAI_BASE_URL: Optional[str] = _yaml_config['openai']['base_url']
-    OPENAI_MODEL: str = _yaml_config['openai']['model']
-    OPENAI_TEMPERATURE: float = _yaml_config['openai']['temperature']
-    OPENAI_MAX_TOKENS: int = _yaml_config['openai']['max_tokens']
-    OPENAI_MAX_RETRIES: int = _yaml_config['openai']['max_retries']
+    OPENAI_API_KEY: Optional[str] = _get_yaml_value('openai', 'api_key')
+    OPENAI_BASE_URL: Optional[str] = _get_yaml_value('openai', 'base_url')
+    OPENAI_MODEL: str = _get_yaml_value('openai', 'model')
+    OPENAI_TEMPERATURE: float = float(
+        _get_yaml_value('openai', 'temperature', '0'))
+    OPENAI_MAX_TOKENS: int = int(
+        _get_yaml_value('openai', 'max_tokens', '16000'))
+    OPENAI_MAX_RETRIES: int = int(
+        _get_yaml_value('openai', 'max_retries', '2'))
 
     @property
     def DATABASE_URL(self) -> str:
