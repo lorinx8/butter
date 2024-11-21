@@ -11,10 +11,12 @@ from app.schemas.model import ModelCreate, ModelUpdate, ModelInDB
 
 router = APIRouter()
 
+
 def get_model_service(db: Session = Depends(get_db)):
     return ModelService(ModelRepository(db))
 
-@router.post("/models/")
+
+@router.post("/models")
 async def create_model(
     model_data: ModelCreate,
     model_service: ModelService = Depends(get_model_service)
@@ -27,7 +29,8 @@ async def create_model(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
-@router.get("/models/")
+
+@router.get("/models")
 async def get_models(
     skip: int = 0,
     limit: int = 100,
@@ -39,6 +42,7 @@ async def get_models(
         return success_response(data=models)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.get("/models/{model_id}")
 async def get_model(
@@ -53,6 +57,7 @@ async def get_model(
         return success_response(data=model)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.put("/models/{model_id}")
 async def update_model(
@@ -70,6 +75,7 @@ async def update_model(
         return error_response(ErrorCode.INVALID_PARAMS, str(e))
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.delete("/models/{model_id}")
 async def delete_model(

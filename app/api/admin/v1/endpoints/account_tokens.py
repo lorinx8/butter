@@ -11,10 +11,12 @@ from app.schemas.account_token import AccountTokenCreate, AccountTokenUpdate, Ac
 
 router = APIRouter()
 
+
 def get_token_service(db: Session = Depends(get_db)):
     return AccountTokenService(AccountTokenRepository(db))
 
-@router.post("/account-tokens/")
+
+@router.post("/account-tokens")
 async def create_token(
     token_data: AccountTokenCreate,
     token_service: AccountTokenService = Depends(get_token_service)
@@ -27,7 +29,8 @@ async def create_token(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
-@router.get("/account-tokens/")
+
+@router.get("/account-tokens")
 async def get_tokens(
     skip: int = 0,
     limit: int = 100,
@@ -39,6 +42,7 @@ async def get_tokens(
         return success_response(data=tokens)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.get("/account-tokens/{token_id}")
 async def get_token(
@@ -54,6 +58,7 @@ async def get_token(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
+
 @router.get("/accounts/{account_id}/tokens")
 async def get_account_tokens(
     account_id: str,
@@ -67,6 +72,7 @@ async def get_account_tokens(
         return error_response(ErrorCode.NOT_FOUND, f"Account {account_id} not found")
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.put("/account-tokens/{token_id}")
 async def update_token(
@@ -84,6 +90,7 @@ async def update_token(
         return error_response(ErrorCode.INVALID_PARAMS, str(e))
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.delete("/account-tokens/{token_id}")
 async def delete_token(

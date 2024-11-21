@@ -11,10 +11,12 @@ from app.schemas.account import AccountCreate, AccountUpdate, AccountInDB
 
 router = APIRouter()
 
+
 def get_account_service(db: Session = Depends(get_db)):
     return AccountService(AccountRepository(db))
 
-@router.post("/accounts/")
+
+@router.post("/accounts")
 async def create_account(
     account_data: AccountCreate,
     account_service: AccountService = Depends(get_account_service)
@@ -27,7 +29,8 @@ async def create_account(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
-@router.get("/accounts/")
+
+@router.get("/accounts")
 async def get_accounts(
     skip: int = 0,
     limit: int = 100,
@@ -39,6 +42,7 @@ async def get_accounts(
         return success_response(data=accounts)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.get("/accounts/{account_id}")
 async def get_account(
@@ -53,6 +57,7 @@ async def get_account(
         return success_response(data=account)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.put("/accounts/{account_id}")
 async def update_account(
@@ -70,6 +75,7 @@ async def update_account(
         return error_response(ErrorCode.INVALID_PARAMS, str(e))
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.delete("/accounts/{account_id}")
 async def delete_account(

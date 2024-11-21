@@ -11,10 +11,12 @@ from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserLogin, To
 
 router = APIRouter()
 
+
 def get_user_service(db: Session = Depends(get_db)):
     return UserService(AdminUserRepository(db))
 
-@router.post("/admin-users/", status_code=201)
+
+@router.post("/admin-users", status_code=201)
 async def create_user(
     user_data: UserCreate,
     user_service: UserService = Depends(get_user_service)
@@ -27,7 +29,8 @@ async def create_user(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
-@router.get("/admin-users/")
+
+@router.get("/admin-users")
 async def get_users(
     token: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
@@ -37,6 +40,7 @@ async def get_users(
         return success_response(data=users)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.get("/admin-users/{user_id}")
 async def get_user(
@@ -51,6 +55,7 @@ async def get_user(
         return success_response(data=user)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.put("/admin-users/{user_id}")
 async def update_user(
@@ -67,6 +72,7 @@ async def update_user(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
+
 @router.delete("/admin-users/{user_id}")
 async def delete_user(
     user_id: str,
@@ -81,13 +87,15 @@ async def delete_user(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
+
 @router.post("/login")
 async def login(
     login_data: UserLogin,
     user_service: UserService = Depends(get_user_service)
 ):
     try:
-        user = user_service.authenticate_user(login_data.email, login_data.password)
+        user = user_service.authenticate_user(
+            login_data.email, login_data.password)
         if not user:
             return error_response(
                 ErrorCode.LOGIN_FAILED,
