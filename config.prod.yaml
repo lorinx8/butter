@@ -1,0 +1,27 @@
+app:
+  name: "Hi! This is Butter!"
+  app_version: "v1"
+  api_prefixs:
+    app: "/api/v1"
+    admin: "/api/admin/v1"
+    common: "/api/common/v1"
+
+database:
+  host: "aws-0-ap-southeast-1.pooler.supabase.com"
+  port: 6543
+  user: "postgres.ldhzcbggdqciydmruwqf"
+  password: "Devdevdev@223"
+  database: "postgres"
+
+openai:
+  api_key: "b6107211-b6bf-401d-885d-9e30856b8ab9"
+  base_url: "https://ark.cn-beijing.volces.com/api/v3"
+  model: "ep-20241107153019-pbc5r"
+  temperature: 0.38
+  max_tokens: 16000
+  max_retries: 2
+
+jwt:
+  secret_key: "your-secret-key-here"
+  algorithm: "HS256"
+  access_token_expire_minutes: 30
