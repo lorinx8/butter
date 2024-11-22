@@ -6,7 +6,7 @@ INSERT INTO model_provider (
     id, 
     code, 
     name, 
-    model_metadata, 
+    metadatas, 
     description, 
     is_active, 
     created_at
@@ -41,7 +41,7 @@ INSERT INTO model_provider (
     id, 
     code, 
     name, 
-    model_metadata, 
+    metadatas, 
     description, 
     is_active, 
     created_at
@@ -71,7 +71,7 @@ INSERT INTO model_provider (
     id, 
     code, 
     name, 
-    model_metadata, 
+    metadatas, 
     description, 
     is_active, 
     created_at
@@ -111,7 +111,7 @@ INSERT INTO model_provider (
     id, 
     code, 
     name, 
-    model_metadata, 
+    metadatas, 
     description, 
     is_active, 
     created_at
@@ -141,7 +141,7 @@ INSERT INTO model_provider (
     id, 
     code, 
     name, 
-    model_metadata, 
+    metadatas, 
     description, 
     is_active, 
     created_at

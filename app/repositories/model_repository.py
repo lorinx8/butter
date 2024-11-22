@@ -2,17 +2,17 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.repositories import models
 
+
 class ModelRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, name: str, provider: str, model: str, is_openai_compatible: bool = False,
+    def create(self, name: str, provider: str, deploy_name: str,
                properties: dict = None, is_active: bool = True) -> models.Model:
         db_model = models.Model(
             name=name,
             provider=provider,
-            model=model,
-            is_openai_compatible=is_openai_compatible,
+            deploy_name=deploy_name,
             properties=properties,
             is_active=is_active
         )
@@ -42,4 +42,4 @@ class ModelRepository:
             self.db.delete(model)
             self.db.commit()
             return True
-        return False 
+        return False

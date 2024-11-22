@@ -6,7 +6,7 @@ from datetime import datetime
 class ModelProviderBase(BaseModel):
     code: str
     name: str
-    model_metadata: Optional[Dict] = None
+    metadatas: Optional[Dict] = None
     description: Optional[str] = None
     is_active: bool = True
 

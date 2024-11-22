@@ -8,12 +8,16 @@ from app.core.error_code import ErrorCode
 from app.repositories.model_repository import ModelRepository
 from app.services.model_service import ModelService
 from app.schemas.model import ModelCreate, ModelUpdate, ModelInDB
+from app.repositories.model_provider_repository import ModelProviderRepository
 
 router = APIRouter()
 
 
 def get_model_service(db: Session = Depends(get_db)):
-    return ModelService(ModelRepository(db))
+    return ModelService(
+        ModelRepository(db),
+        ModelProviderRepository(db)
+    )
 
 
 @router.post("/models")

@@ -11,6 +11,9 @@ class ModelProviderRepository:
     def get_by_id(self, provider_id: str) -> Optional[models.ModelProvider]:
         return self.db.query(models.ModelProvider).filter(models.ModelProvider.id == provider_id).first()
 
+    def get_by_code(self, code: str) -> Optional[models.ModelProvider]:
+        return self.db.query(models.ModelProvider).filter(models.ModelProvider.code == code).first()
+
     def get_all(self, skip: int = 0, limit: int = 100) -> List[models.ModelProvider]:
         return self.db.query(models.ModelProvider).offset(skip).limit(limit).all()
 
