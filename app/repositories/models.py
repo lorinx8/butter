@@ -10,9 +10,8 @@ Base = declarative_base()
 def generate_uuid():
     return str(uuid.uuid4())
 
+
 # 定义账户
-
-
 class Account(Base):
     __tablename__ = "account"
 
@@ -24,9 +23,8 @@ class Account(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
 # 定义账户令牌
-
-
 class AccountToken(Base):
     __tablename__ = "account_token"
     id = Column(String(36), primary_key=True, default=generate_uuid)
@@ -36,9 +34,8 @@ class AccountToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
 # 定义管理员用户
-
-
 class AdminUser(Base):
     __tablename__ = "admin_user"
 
@@ -51,9 +48,8 @@ class AdminUser(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
 # 定义提示词
-
-
 class Prompt(Base):
     __tablename__ = "prompt"
 
@@ -65,9 +61,8 @@ class Prompt(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
 # 定义模型
-
-
 class Model(Base):
     __tablename__ = "model"
 
@@ -108,5 +103,19 @@ class Dict(Base):
     description = Column(Text)
     group_id = Column(String(36), ForeignKey(
         "dict_group.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+# 定义模型提供商
+class ModelProvider(Base):
+    __tablename__ = "model_provider"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    code = Column(String(255), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    model_metadata = Column(JSONB)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

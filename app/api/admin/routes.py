@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.admin.v1.endpoints import admin_users, dict_groups, dicts, prompts, accounts, account_tokens, models
+from app.api.admin.v1.endpoints import admin_users, dict_groups, dicts, prompts, accounts, account_tokens, models, model_providers
 
 router = APIRouter()
 
@@ -11,3 +11,4 @@ router.include_router(account_tokens.router, tags=["Account Tokens"])
 router.include_router(models.router, tags=["Models"])
 router.include_router(dict_groups.router, tags=["Dictionary Groups"])
 router.include_router(dicts.router, tags=["Dictionary Values"])
+router.include_router(model_providers.router, tags=["model_providers"])
