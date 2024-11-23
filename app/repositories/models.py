@@ -62,6 +62,20 @@ class Prompt(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
+# 定义模型提供商
+class ModelProvider(Base):
+    __tablename__ = "model_provider"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    code = Column(String(255), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    metadatas = Column(JSONB)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 # 定义模型
 class Model(Base):
     __tablename__ = "model"
@@ -69,7 +83,7 @@ class Model(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(255), nullable=False)
     provider = Column(String(255), nullable=False)
-    deploy_name = Column(String(255), nullable=False)
+    deploy_name = Column(String(255), nullable=False, unique=True)
     properties = Column(JSONB)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -102,19 +116,5 @@ class Dict(Base):
     description = Column(Text)
     group_id = Column(String(36), ForeignKey(
         "dict_group.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-# 定义模型提供商
-class ModelProvider(Base):
-    __tablename__ = "model_provider"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    code = Column(String(255), unique=True, nullable=False)
-    name = Column(String(255), nullable=False)
-    metadatas = Column(JSONB)
-    description = Column(Text)
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

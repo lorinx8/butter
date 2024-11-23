@@ -27,6 +27,12 @@ class ModelRepository:
     def get_all(self, skip: int = 0, limit: int = 100) -> List[models.Model]:
         return self.db.query(models.Model).offset(skip).limit(limit).all()
 
+    def get_active_models(self) -> List[models.Model]:
+        return self.db.query(models.Model).filter(models.Model.is_active == True).all()
+
+    def get_by_deploy_name(self, deploy_name: str) -> Optional[models.Model]:
+        return self.db.query(models.Model).filter(models.Model.deploy_name == deploy_name).first()
+
     def update(self, model_id: str, **kwargs) -> Optional[models.Model]:
         model = self.get_by_id(model_id)
         if model:

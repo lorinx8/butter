@@ -7,6 +7,7 @@ from app.api.common import routes as common_routes
 from app.core.database import init_db
 from app.middleware.access_log import access_log_middleware
 from fastapi.middleware.cors import CORSMiddleware
+from app.managers.llm.model_pool import ModelPool
 
 # 检查数据库配置
 settings.check_database_config()
@@ -20,8 +21,12 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Application startup")
     await init_db()
+    await ModelPool.initialize()
+
     yield
+
     # Shutdown
+    await ModelPool.cleanup()
     logger.info("Application shutdown")
 
 app = FastAPI(

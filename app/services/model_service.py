@@ -4,6 +4,7 @@ from app.repositories.model_repository import ModelRepository
 from app.repositories.model_provider_repository import ModelProviderRepository
 from app.schemas.model import ModelCreate, ModelUpdate
 from app.repositories.models import Model
+from sqlalchemy.exc import IntegrityError
 
 
 class ModelService:
@@ -31,16 +32,25 @@ class ModelService:
                 )
 
     def create_model(self, model_data: ModelCreate) -> Model:
-        # 验证属性
-        self.validate_properties(model_data.provider, model_data.properties)
+        try:
+            # 验证属性
+            self.validate_properties(
+                model_data.provider, model_data.properties)
 
-        return self.model_repository.create(
-            name=model_data.name,
-            provider=model_data.provider,
-            deploy_name=model_data.deploy_name,
-            properties=model_data.properties,
-            is_active=model_data.is_active
-        )
+            return self.model_repository.create(
+                name=model_data.name,
+                provider=model_data.provider,
+                deploy_name=model_data.deploy_name,
+                properties=model_data.properties,
+                is_active=model_data.is_active
+            )
+        except IntegrityError as e:
+            if "uq_model_deploy_name" in str(e):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Model with deploy_name '{model_data.deploy_name}' already exists"
+                )
+            raise e
 
     def get_model(self, model_id: str) -> Model:
         model = self.model_repository.get_by_id(model_id)
@@ -50,6 +60,12 @@ class ModelService:
 
     def get_models(self, skip: int = 0, limit: int = 100) -> List[Model]:
         return self.model_repository.get_all(skip=skip, limit=limit)
+
+    def get_active_models(self) -> List[Model]:
+        return self.model_repository.get_active_models()
+
+    def get_by_deploy_name(self, deploy_name: str) -> Model:
+        return self.model_repository.get_by_deploy_name(deploy_name)
 
     def update_model(self, model_id: str, model_data: ModelUpdate) -> Model:
         update_data = model_data.model_dump(exclude_unset=True)
