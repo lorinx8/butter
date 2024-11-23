@@ -1,5 +1,4 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import verify_token
@@ -7,7 +6,7 @@ from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.admin_user_repository import AdminUserRepository
 from app.services.user_service import UserService
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserLogin, Token
+from app.schemas.user import UserCreate, UserUpdate, UserLogin
 
 router = APIRouter()
 

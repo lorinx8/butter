@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -7,7 +6,7 @@ from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.account_token_repository import AccountTokenRepository
 from app.services.account_token_service import AccountTokenService
-from app.schemas.account_token import AccountTokenCreate, AccountTokenUpdate, AccountTokenInDB
+from app.schemas.account_token import AccountTokenCreate, AccountTokenUpdate
 
 router = APIRouter()
 

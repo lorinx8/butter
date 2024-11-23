@@ -3,7 +3,6 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 from enum import Enum
 
-
 class ValueType(str, Enum):
     INTEGER = "integer"
     DECIMAL = "decimal"

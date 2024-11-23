@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -7,7 +6,7 @@ from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.model_repository import ModelRepository
 from app.services.model_service import ModelService
-from app.schemas.model import ModelCreate, ModelUpdate, ModelInDB
+from app.schemas.model import ModelCreate, ModelUpdate
 from app.repositories.model_provider_repository import ModelProviderRepository
 
 router = APIRouter()

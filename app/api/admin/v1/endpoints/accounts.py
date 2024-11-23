@@ -6,7 +6,7 @@ from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.account_repository import AccountRepository
 from app.services.account_service import AccountService
-from app.schemas.account import AccountCreate, AccountUpdate, AccountInDB
+from app.schemas.account import AccountCreate, AccountUpdate
 
 router = APIRouter()
 

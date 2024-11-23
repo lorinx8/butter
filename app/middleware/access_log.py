@@ -3,7 +3,6 @@ import time
 from app.core.logging import access_logger
 import json
 from typing import Callable
-import asyncio
 
 async def log_request_body(request: Request) -> str:
     try:

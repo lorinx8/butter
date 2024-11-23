@@ -1,5 +1,5 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query
+from typing import Optional
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import verify_token
@@ -7,7 +7,6 @@ from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.model_provider_repository import ModelProviderRepository
 from app.services.model_provider_service import ModelProviderService
-from app.schemas.model_provider import ModelProviderInDB
 
 router = APIRouter()
 

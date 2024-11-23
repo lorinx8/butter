@@ -7,6 +7,7 @@ and concurrent access of model instances.
 from typing import Dict, Optional, List, Final
 import asyncio
 from asyncio_pool import AioPool
+from contextlib import asynccontextmanager
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from app.services.model_service import ModelService
@@ -18,7 +19,12 @@ from app.core.database import SessionLocal
 
 
 class ModelPool:
-    """LangChain模型池管理类，负责维护和管理所有模型实例"""
+    """
+    LangChain模型池管理类
+
+    负责维护和管理所有模型实例，提供线程安全的模型访问机制。
+    使用 asyncio_pool 来控制并发访问，确保每个模型的资源使用在限制范围内。
+    """
 
     DEFAULT_POOL_SIZE: Final = 3
     _instance: Optional['ModelPool'] = None
@@ -26,56 +32,38 @@ class ModelPool:
     _initialized: bool = False
 
     def __init__(self):
-        """
-        初始化方法是私有的，请使用 get_instance() 或 initialize() 方法获取实例
-        """
+        """初始化方法是私有的，请使用 get_instance() 或 initialize() 方法获取实例"""
         # 初始化服务和依赖
-        db = SessionLocal()
-        self.model_repository = ModelRepository(db)
-        self.provider_repository = ModelProviderRepository(db)
+        self._db = SessionLocal()
+        self.model_repository = ModelRepository(self._db)
+        self.provider_repository = ModelProviderRepository(self._db)
         self.model_service = ModelService(
             self.model_repository, self.provider_repository)
 
-        # key: 模型的唯一标识符（model.deploy_name） value: 用于控制该模型并发访问的池对象
-        self._model_pools: Dict[str, AioPool] = {}
-
-        # key: 模型的唯一标识符（model.deploy_name） value: 该模型的实例
-        self._model_instances: Dict[str, None | BaseChatModel] = {}
-
-        # key: 模型的唯一标识符（model.deploy_name） value: 该模型的配置信息
+        # 模型实例池
+        self._model_instances: Dict[str, BaseChatModel] = {}
+        # 模型配置缓存
         self._model_configs: Dict[str, Model] = {}
-
+        # 并发控制池，每个模型一个信号量
+        self._semaphores: Dict[str, asyncio.Semaphore] = {}
+        # 用于保护模型池操作的锁
         self._instance_lock = asyncio.Lock()
+        # 任务池，用于并发控制
+        self._task_pool = AioPool(size=self.DEFAULT_POOL_SIZE)
 
     @classmethod
     async def initialize(cls) -> 'ModelPool':
-        """
-        初始化ModelPool单例
-
-        Returns:
-            ModelPool: 初始化后的ModelPool实例
-        """
-        # 初始化模型池
-        logger.info("开始初始化模型池...")
+        """初始化ModelPool单例"""
         async with cls._lock:
             if not cls._instance:
                 cls._instance = cls()
                 cls._initialized = True
-                # 初始化模型池
                 await cls._instance._initialize_pools()
             return cls._instance
 
     @classmethod
     async def get_instance(cls) -> 'ModelPool':
-        """
-        获取ModelPool单例实例
-
-        Returns:
-            ModelPool: ModelPool单例实例
-
-        Raises:
-            RuntimeError: 如果ModelPool未初始化
-        """
+        """获取ModelPool单例实例"""
         if not cls._initialized:
             raise RuntimeError(
                 "ModelPool not initialized. Call initialize() first")
@@ -85,54 +73,57 @@ class ModelPool:
         """初始化所有模型池"""
         async with self._instance_lock:
             active_models = self.model_service.get_active_models()
-            logger.info(f"开始初始化模型池，发现 {len(active_models)} 个活跃模型")
             for model in active_models:
-                await self._initialize_model_pool(model)
-            logger.info("模型池初始化完成")
+                await self._initialize_model(model)
 
-    async def _initialize_model_pool(self, model: Model):
-        """初始化单个模型的模型池"""
-        if model.deploy_name in self._model_pools:
-            logger.info(f"模型 {model.deploy_name} 已存在于模型池中，跳过初始化")
+    async def _initialize_model(self, model: Model):
+        """初始化单个模型"""
+        if model.deploy_name in self._model_instances:
             return
 
+        # 创建模型实例
+        instance = self._create_model_instance(model)
+        # 创建并发控制信号量
+        semaphore = asyncio.Semaphore(self.DEFAULT_POOL_SIZE)
+
+        self._model_instances[model.deploy_name] = instance
+        self._model_configs[model.deploy_name] = model
+        self._semaphores[model.deploy_name] = semaphore
+
+        logger.info(
+            f"Initialized model {model.deploy_name} with concurrency limit {self.DEFAULT_POOL_SIZE}")
+
+    @asynccontextmanager
+    async def get_model(self, deploy_name: str):
+        """
+        获取模型实例的上下文管理器
+
+        使用方式：
+        async with model_pool.get_model("gpt-3.5-turbo") as model:
+            result = await model.agenerate(["Your prompt"])
+        """
+        if deploy_name not in self._model_instances:
+            raise ValueError(f"Model {deploy_name} not found in pool")
+
+        semaphore = self._semaphores[deploy_name]
+        model = self._model_instances[deploy_name]
+
+        async def _use_model():
+            async with semaphore:
+                return model
+
         try:
-            # 创建模型实例
-            logger.info(f"正在初始化模型 {model.deploy_name}（{model.provider}）")
-            instance = self._create_model_instance(model)
-
-            # 创建并发控制池
-            pool = AioPool(size=self.DEFAULT_POOL_SIZE)
-
-            self._model_pools[model.deploy_name] = pool
-            self._model_instances[model.deploy_name] = instance
-            self._model_configs[model.deploy_name] = model
-
-            logger.info(
-                f"模型 {model.deploy_name} 初始化成功，并发池大小：{self.DEFAULT_POOL_SIZE}")
-        except Exception as e:
-            logger.error(f"模型 {model.deploy_name} 初始化失败：{str(e)}")
-            raise
-
-    async def get_model(self, model_code: str) -> Optional[BaseChatModel]:
-        """从模型池中获取一个模型实例并执行任务"""
-        if model_code not in self._model_pools:
-            raise ValueError(f"Model {model_code} not found in pool")
-
-        pool = self._model_pools[model_code]
-        model = self._model_instances[model_code]
-
-        # 使用 AioPool 来控制并发
-        async def _get_model():
-            return model
-
-        # 在并发池中执行获取模型的操作
-        return await pool.spawn(_get_model())
+            # 在任务池中执行模型操作
+            instance = await self._task_pool.spawn(_use_model())
+            yield instance
+        finally:
+            # 这里可以添加一些清理逻辑，如果需要的话
+            pass
 
     async def refresh_model(self, deploy_name: str):
         """刷新指定模型的实例"""
         async with self._instance_lock:
-            if deploy_name not in self._model_pools:
+            if deploy_name not in self._model_instances:
                 raise ValueError(f"Model {deploy_name} not found in pool")
 
             # 获取最新的模型配置
@@ -140,51 +131,45 @@ class ModelPool:
             if not model:
                 raise ValueError(f"Model {deploy_name} not found in database")
 
-            # 清理现有实例
-            self._model_instances[deploy_name] = None
-
-            # 重新初始化池
-            await self._initialize_model_pool(model)
-            logger.info(f"Refreshed model pool for {deploy_name}")
+            # 等待当前任务完成
+            semaphore = self._semaphores[deploy_name]
+            async with semaphore:
+                # 更新模型实例
+                self._model_instances[deploy_name] = self._create_model_instance(
+                    model)
+                self._model_configs[deploy_name] = model
+                logger.info(f"Refreshed model {deploy_name}")
 
     def get_pool_status(self) -> List[Dict]:
         """获取所有模型池的状态信息"""
         status = []
-        for model_code, pool in self._model_pools.items():
-            model_config = self._model_configs[model_code]
+        for deploy_name, model in self._model_instances.items():
+            config = self._model_configs[deploy_name]
+            semaphore = self._semaphores[deploy_name]
             status.append({
-                'deploy_name': model_code,
-                'name': model_config.name,
-                'provider': model_config.provider,
+                'deploy_name': deploy_name,
+                'name': config.name,
+                'provider': config.provider,
+                'concurrency_limit': self.DEFAULT_POOL_SIZE,
+                'available_slots': semaphore._value,  # 当前可用的并发槽
             })
         return status
 
-    @classmethod
-    async def cleanup(cls):
-        """清理模型池资源的类方法"""
-        instance = await cls.get_instance()
-        logger.info("开始清理模型池资源...")
-        # 执行实际的清理工作
-        await instance._cleanup()
-        logger.info("模型池资源清理完成")
+    async def cleanup(self):
+        """清理所有资源"""
+        async with self._instance_lock:
+            # 等待所有任务完成
+            await self._task_pool.join()
 
-    async def _cleanup(self):
-        """实际的清理工作"""
-        for deploy_name, pool in self._model_pools.items():
-            logger.info(f"正在清理模型 {deploy_name} 的资源")
-            # 清空模型池
-            self._model_pools[deploy_name] = None
-            self._model_instances[deploy_name] = None
-            self._model_configs[deploy_name] = None
+            # 清理资源
+            self._model_instances.clear()
+            self._model_configs.clear()
+            self._semaphores.clear()
 
-        # 清空所有字典
-        self._model_pools.clear()
-        self._model_instances.clear()
-        self._model_configs.clear()
+            # 关闭数据库连接
+            self._db.close()
 
-    # --------------------------------------------------------------------------
-    # 模型实例创建
-    # --------------------------------------------------------------------------
+            logger.info("Cleaned up all model pool resources")
 
     def _create_model_instance(self, model: Model) -> BaseChatModel:
         """根据模型配置创建新的模型实例"""
