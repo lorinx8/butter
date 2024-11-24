@@ -19,4 +19,7 @@ class ErrorCode(Enum):
     # 数据库相关错误 (3000-3999)
     DB_ERROR = 3000
     
+    # 系统错误 (9500-9599)
+    INTERNAL_SERVER_ERROR = 9500
+    
     # 其他业务错误可以继续添加...

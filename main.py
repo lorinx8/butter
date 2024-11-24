@@ -1,13 +1,16 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.managers.llm.model_pool import ModelPool
+from app.core.exception_handlers import http_exception_handler, general_exception_handler
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
 from app.core.database import init_db
 from app.middleware.access_log import access_log_middleware
-from fastapi.middleware.cors import CORSMiddleware
-from app.managers.llm.model_pool import ModelPool
+
 
 # 检查数据库配置
 settings.check_database_config()
@@ -17,7 +20,7 @@ logger = setup_logging()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     # Startup
     logger.info("Application startup")
     await init_db()
@@ -31,9 +34,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url="/api/openapi.json",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan
 )
+
+# 添加异常处理器
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 # 添加 CORS 中间件配置
 app.add_middleware(

@@ -61,6 +61,8 @@ class Settings(BaseSettings):
     # App Settings
     PROJECT_NAME: str = get_yaml_value(_yaml_config, 'app', 'name')
 
+    API_V1_STR: str = ''
+
     # API Settings
     APP_API_V1_STR: str = get_yaml_value(
         _yaml_config, 'app', 'api_prefixs', 'app')
