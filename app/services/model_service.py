@@ -67,6 +67,35 @@ class ModelService:
     def get_by_deploy_name(self, deploy_name: str) -> Model:
         return self.model_repository.get_by_deploy_name(deploy_name)
 
+    def get_model_name_by_deploy_name(self, deploy_name: str) -> str:
+        """
+        根据部署名称获取模型提供商真正的模型名称
+        """
+        model = self.get_by_deploy_name(deploy_name)
+        if not model:
+            raise HTTPException(status_code=404, detail="Model not found")
+        provider = model.provider
+        # 不同的provider从不同的属性字段中获取真正的模型名称
+        if provider == "openai":
+            return model.properties["model"]
+        elif provider == "azure_openai":
+            return model.properties["deployment_name"]
+        return ""
+
+    def get_provider_and_model_name_by_deploy_name(self, deploy_name: str) -> (str, str):
+        """
+        根据部署名称获取模型提供商和真正的模型名称
+        """
+        model = self.get_by_deploy_name(deploy_name)
+        if not model:
+            raise HTTPException(status_code=404, detail="Model not found")
+        provider = model.provider
+        model_name = ''
+        # 不同的provider从不同的属性字段中获取真正的模型名称
+        if provider == "openai":
+            model = model.properties["model"]
+        return provider, model
+
     def update_model(self, model_id: str, model_data: ModelUpdate) -> Model:
         update_data = model_data.model_dump(exclude_unset=True)
         model = self.model_repository.update(model_id, **update_data)

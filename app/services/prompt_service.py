@@ -39,6 +39,12 @@ class PromptService:
     def get_prompt_by_code(self, code: str) -> Optional[Prompt]:
         return self.prompt_repository.get_by_code(code)
 
+    def get_prompt_content_by_code(self, code: str) -> Optional[str]:
+        prompt = self.prompt_repository.get_by_code(code)
+        if prompt:
+            return prompt.content
+        return None
+
     def search_prompts(self, query: str) -> List[Prompt]:
         return self.prompt_repository.search(query)
 
