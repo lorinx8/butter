@@ -34,21 +34,8 @@ class ModelPoolConfig:
         semaphore = self.semaphores.get(deploy_name)
         if semaphore is None:
             return 0
-        # 尝试多次获取信号量，直到失败，以此计算可用数量
-        count = 0
-        while count < ModelPool.DEFAULT_POOL_SIZE:
-            try:
-                acquired = semaphore.acquire_nowait()
-                if acquired:
-                    count += 1
-                else:
-                    break
-            except Exception:  # 当没有可用资源时会抛出异常
-                break
-        # 释放所有获取的信号量
-        for _ in range(count):
-            semaphore.release()
-        return count
+        # 信号量的_value属性表示当前可用的槽位数
+        return semaphore._value
 
 
 class ModelPool:

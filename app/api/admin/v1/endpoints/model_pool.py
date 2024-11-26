@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.get("/model-pool/status")
 async def get_pool_status(
-    token: dict = Depends(verify_token)
+    _: dict = Depends(verify_token)
 ):
     """
     获取模型池状态
@@ -34,7 +34,7 @@ async def get_pool_status(
 
 @router.post("/model-pool/refresh")
 async def refresh_pool(
-    token: dict = Depends(verify_token)
+    _: dict = Depends(verify_token)
 ):
     """
     刷新模型池
@@ -49,7 +49,7 @@ async def refresh_pool(
 @router.post("/model-pool/refresh/{deploy_name}")
 async def refresh_model(
     deploy_name: str,
-    token: dict = Depends(verify_token)
+    _: dict = Depends(verify_token)
 ):
     """
     刷新指定模型

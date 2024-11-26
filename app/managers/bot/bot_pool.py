@@ -20,19 +20,8 @@ class BotPoolConfig:
         semaphore = self.semaphores.get(bot_id)
         if semaphore is None:
             return 0
-        count = 0
-        while count < BotPool.DEFAULT_POOL_SIZE:
-            try:
-                acquired = semaphore.acquire_nowait()
-                if acquired:
-                    count += 1
-                else:
-                    break
-            except Exception:
-                break
-        for _ in range(count):
-            semaphore.release()
-        return count
+        # 信号量的_value属性表示当前可用的槽位数
+        return semaphore._value
 
 
 class BotPool:

@@ -7,7 +7,6 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg import Connection
 import json
 from app.core.config import settings
-from app.core.logging import logger
 
 
 @dataclass
