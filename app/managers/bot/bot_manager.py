@@ -11,6 +11,8 @@ from app.services.prompt_service import PromptService
 from app.schemas.bot import BotStandardCreate
 from app.managers.bot.bot_pool import BotPool
 from app.core.database import SessionLocal
+from app.core.logging import logger
+from app.managers.bot.bot_standard import BotStandard, BotConfig
 
 
 class BotManager:
@@ -38,6 +40,8 @@ class BotManager:
                 # 初始化池
                 await cls._instance._init_pools()
                 cls._initialized = True
+                # 把已有的机器人放到池里
+                await cls._instance.load_bots_to_pool()
             return cls._instance
 
     @classmethod
@@ -53,13 +57,90 @@ class BotManager:
         if not self.bot_pool:
             self.bot_pool = await BotPool.initialize()
 
+        # 初始化机器人
+        # 开始从数据库表中获取智能体信息，并将其加载到池中
+
+
     def __del__(self):
         """清理资源"""
         if hasattr(self, 'db'):
             self.db.close()
 
+
     # ------------------------------------------------------------
-    # 标准机器人
+    # 获取智能体信息，并添加到池中
+    # ------------------------------------------------------------
+    async def load_bots_to_pool(self):
+        """从数据库加载所有机器人并添加到池中"""
+
+        if not self._initialized:
+            raise RuntimeError(
+                "BotManager not initialized. Call initialize() first")
+
+        logger.info("Loading bots to pool...")
+        # 获取所有机器人
+        bots = self.bot_service.get_bots()
+        if not bots or len(bots) == 0:
+            logger.info("No bots found")
+            return
+        else:
+            logger.info(f"Found {len(bots)} bots")
+
+        '''
+        properties:
+        {
+            "max_tokens": 333,
+            "memory_enable": true,
+            "memory_strategy": "tokens",
+            "max_message_rounds": null,
+            "models_deploy_name": "openai-gpt-4o",
+            "models_prompt_code": "prompt-20241126174648-EqSH"
+        }
+        '''
+        for bot in bots:
+            logger.info(f"Loading bot: {bot.code} - {bot.name}")
+            # 通过部署名得到提供商的真实模型名
+            deploy_name = bot.properties.get('models_deploy_name')
+            if deploy_name is None:
+                logger.warning(f"Bot {bot.code} has no deploy name")
+                continue
+            model = self.model_service.get_by_deploy_name(deploy_name)
+            if not model:
+                logger.warning(f"Bot {bot.code} has no model")
+                continue
+            # 得到提示词内容
+            prompt_code = bot.properties.get('models_prompt_code')
+            prompt_content = self.prompt_service.get_prompt_content_by_code(prompt_code)
+            # 检查是否存在
+            if not prompt_content:
+                prompt_content = ''
+
+            # 创建 BotConfig 实例
+            bot_config = BotConfig(
+                bot_code = bot.code,
+                bot_name = bot.name,
+                deploy_name = deploy_name,
+                provider_code = model.provider,
+                model_properties=model.properties,
+                prompt_template=prompt_content,
+
+                memory_enable=bot.properties.get('memory_enable', False),
+                memory_strategy=bot.properties.get('memory_strategy'),
+                memory_max_tokens=bot.properties.get('max_tokens'),
+                memory_max_rounds=bot.properties.get('max_message_rounds'),
+            )
+
+            # 创建 BotStandard 实例
+            bot_instance = BotStandard(bot_config)
+
+            # 将机器人添加到池中
+            await self.bot_pool.add_bot(bot.id, bot, bot_instance)
+
+        logger.info(f"Loaded {len(bots)} bots into the pool")
+
+
+    # ------------------------------------------------------------
+    # 添加标准机器人
     # ------------------------------------------------------------
     def create_standard_bot(self, bot_data: BotStandardCreate) -> Dict:
         """

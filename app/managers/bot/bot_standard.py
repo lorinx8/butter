@@ -13,32 +13,39 @@ from app.core.logging import logger
 @dataclass
 class BotConfig:
     """标准机器人配置"""
-    deploy_name: str               # 模型部署标识
-    provider_code: str             # 模型提供方标识
-    model_name: str                # 模型名称
-    prompt_template: str           # 提示词模板内容
-    memory_enable: bool = False    # 是否启用记忆
-    memory_strategy: Optional[str] = None  # 记忆策略 (tokens/messages)
-    memory_max_tokens: Optional[int] = None  # 最大token数
-    memory_max_rounds: Optional[int] = None  # 最大消息轮数
-    temperature: float = 0.7       # 温度
-    max_tokens: int = 2000        # 最大token数
-    max_retries: int = 2          # 最大重试次数
-
+    bot_code: str                               # 智能体标识
+    bot_name: str                               # 智能体名称
+    deploy_name: str                            # 模型部署标识
+    provider_code: str                          # 模型提供方标识
+    prompt_template: str                        # 提示词模板内容
+    model_properties: dict                      # 模型配置
+    memory_enable: bool = False                 # 是否启用记忆
+    memory_strategy: Optional[str] = None       # 记忆策略 (tokens/messages)
+    memory_max_tokens: Optional[int] = None     # 最大token数
+    memory_max_rounds: Optional[int] = None     # 最大消息轮数
+    temperature: float = 0.7                    # 温度
+    max_tokens: int = 2000                      # 最大token数
+    max_retries: int = 2                        # 最大重试次数
 
 class BotStandard:
     """标准机器人实现"""
 
     def __init__(self, config: BotConfig):
+        # 配置信息
         self.config = config
-        self.workflow = StateGraph(MessagesState)
-        self.workflow.add_node("call_model", self.__call_model)
-        self.workflow.add_edge(START, "call_model")
 
+        # bot basic info
+        self.bot_name = config.bot_name
+
+        # memory
         self.checkpoint = None
         if self.config.memory_enable:
             self.checkpoint = self._create_checkpoint()
 
+        # langgraph
+        self.workflow = StateGraph(MessagesState)
+        self.workflow.add_node("call_model", self.__call_model)
+        self.workflow.add_edge(START, "call_model")
         self.app = self.workflow.compile(checkpointer=self.checkpoint)
 
         # 初始化模型
@@ -56,6 +63,7 @@ class BotStandard:
         checkpoint = PostgresSaver(conn)
         checkpoint.setup()
         return checkpoint
+
 
     def __call_model(self, state: MessagesState, config: dict):
         """调用模型"""
@@ -135,7 +143,9 @@ class BotStandard:
         """创建模型实例"""
         if self.config.provider_code == "openai":
             return ChatOpenAI(
-                model=self.config.model_name,
+                model=self.config.model_properties.get('model'),
+                base_url=self.config.model_properties.get('base_url'),
+                openai_api_key=self.config.model_properties.get('api_key'),
                 temperature=self.config.temperature,
                 max_tokens=self.config.max_tokens,
                 max_retries=self.config.max_retries
