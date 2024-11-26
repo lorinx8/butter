@@ -1,8 +1,10 @@
+# pylint: disable=not-callable
+
+import uuid
 from sqlalchemy import Boolean, Column, ForeignKey, String, Text, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-import uuid
 
 Base = declarative_base()
 
@@ -54,6 +56,7 @@ class Prompt(Base):
     __tablename__ = "prompt"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
+    code = Column(String(255), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     description = Column(Text)
@@ -116,5 +119,19 @@ class Dict(Base):
     description = Column(Text)
     group_id = Column(String(36), ForeignKey(
         "dict_group.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+# 定义机器人
+class Bot(Base):
+    __tablename__ = "bot"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    code = Column(String(255), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    bot_type = Column(String(50), nullable=False)  # standard, customized
+    properties = Column(JSONB)
+    description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

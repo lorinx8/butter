@@ -4,8 +4,9 @@ from functools import lru_cache
 from sqlalchemy import or_
 from app.repositories import models
 
+
 class PromptRepository:
-    
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -13,8 +14,9 @@ class PromptRepository:
     def get_by_id(self, prompt_id: str) -> Optional[models.Prompt]:
         return self.db.query(models.Prompt).filter(models.Prompt.id == prompt_id).first()
 
-    def create(self, name: str, content: str, description: Optional[str] = None) -> models.Prompt:
+    def create(self, code: str, name: str, content: str, description: Optional[str] = None) -> models.Prompt:
         db_prompt = models.Prompt(
+            code=code,
             name=name,
             content=content,
             description=description
@@ -27,6 +29,9 @@ class PromptRepository:
 
     def get_all(self, skip: int = 0, limit: int = 100) -> List[models.Prompt]:
         return self.db.query(models.Prompt).offset(skip).limit(limit).all()
+
+    def get_by_code(self, code: str) -> Optional[models.Prompt]:
+        return self.db.query(models.Prompt).filter(models.Prompt.code == code).first()
 
     def update(self, prompt_id: str, **kwargs) -> Optional[models.Prompt]:
         prompt = self.get_by_id(prompt_id)

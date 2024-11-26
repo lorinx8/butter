@@ -322,7 +322,7 @@ class ModelPool:
     def _create_openai_instance(model: Model) -> BaseChatModel:
         """创建OpenAI模型实例"""
         return ChatOpenAI(
-            model=model.deploy_name,
+            model=model.properties.get('model'),
             api_key=model.properties.get('api_key'),
             base_url=model.properties.get('base_url'),
         )

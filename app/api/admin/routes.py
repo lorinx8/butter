@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.admin.v1.endpoints import (
     admin_users, dict_groups, dicts, prompts,
     accounts, account_tokens, models, model_providers,
-    model_pool, chat
+    model_pool, chat, bots
 )
 
 router = APIRouter()
@@ -18,3 +18,4 @@ router.include_router(model_providers.router, tags=["Model Providers"])
 router.include_router(models.router, tags=["Models"])
 router.include_router(chat.router, tags=["Admin Chat"])
 router.include_router(model_pool.router, tags=["Model Pool"])
+router.include_router(bots.router, tags=["Bots"])

@@ -26,7 +26,7 @@ INSERT INTO model_provider (
             "order": 2
         },
         {
-            "field": "organization",
+            "field": "model",
             "default": "",
             "order": 3
         }

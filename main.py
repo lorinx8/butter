@@ -10,6 +10,8 @@ from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
 from app.core.database import init_db
 from app.middleware.access_log import access_log_middleware
+from app.managers.bot.bot_manager import BotManager
+from app.managers.bot.bot_pool import BotPool
 
 
 # 检查数据库配置
@@ -25,11 +27,13 @@ async def lifespan(fastapi_app: FastAPI):
     logger.info("Application startup")
     await init_db()
     await ModelPool.initialize()
+    await BotManager.initialize()
 
     yield
 
     # Shutdown
     await ModelPool.cleanup()
+    await BotManager.cleanup()
     logger.info("Application shutdown")
 
 app = FastAPI(
@@ -64,6 +68,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=settings.UVICORN_PORT,
-        reload=False,  # 开发模式下启用热重载
+        reload=True,  # 开发模式下启用热重载
         access_log=False
     )
