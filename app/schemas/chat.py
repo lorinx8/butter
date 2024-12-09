@@ -7,3 +7,11 @@ class ModelChatRequest(BaseModel):
     model: str
     messages: List[Dict[str, str]]
     stream: bool = False
+
+
+class BotChatRequest(BaseModel):
+    """Bot chat request schema"""
+    bot_id: str
+    session_id: str
+    messages: str
+    stream: bool = False

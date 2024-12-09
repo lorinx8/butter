@@ -12,12 +12,13 @@
 @version: 1.0
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 from fastapi.responses import StreamingResponse
-from app.schemas.model_chat import ModelChatRequest
+from app.schemas.chat import ModelChatRequest, BotChatRequest
 from app.core.security import verify_token
 from app.core.response import success_response
 from app.managers.chat.basic_chat import BasicChat
+from app.managers.chat.bot_chat import BotChat
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ router = APIRouter()
 @router.post("/chat/completions")
 async def admin_chat(
     request: ModelChatRequest,
-    token: dict = Depends(verify_token),  # Ensure admin access
+    _: dict = Depends(verify_token),  # Ensure admin access
 ):
     """
     管理员聊天接口
@@ -47,4 +48,26 @@ async def admin_chat(
             messages=request.messages,
             stream=False
         )
+        return success_response(data={"message": response})
+
+
+@router.post("/bot/chat/completions")
+async def bot_chat_stream(
+    request: BotChatRequest,
+    _: dict = Depends(verify_token),
+):
+    """
+    机器人流式聊天接口
+    """
+    if request.stream:
+        bot_id = request.bot_id
+        messages = request.messages
+        return StreamingResponse(
+            BotChat.chat(bot_id, messages, stream=True),
+            media_type="text/event-stream")
+    else:
+        bot_id = request.bot_id
+        session_id = request.session_id
+        messages = request.messages
+        response = await BotChat.chat(bot_id, session_id, messages)
         return success_response(data={"message": response})
