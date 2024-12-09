@@ -2,7 +2,7 @@ from typing import List, Dict
 from fastapi import HTTPException
 from app.repositories.model_repository import ModelRepository
 from app.repositories.model_provider_repository import ModelProviderRepository
-from app.schemas.model import ModelCreate, ModelUpdate
+from app.schemas.models import ModelsCreate, ModelsUpdate
 from app.repositories.models import Model
 from sqlalchemy.exc import IntegrityError
 
@@ -31,7 +31,7 @@ class ModelService:
                     detail=f"Invalid properties fields: {invalid_fields}"
                 )
 
-    def create_model(self, model_data: ModelCreate) -> Model:
+    def create_model(self, model_data: ModelsCreate) -> Model:
         try:
             # 验证属性
             self.validate_properties(
@@ -96,7 +96,7 @@ class ModelService:
             model = model.properties["model"]
         return provider, model
 
-    def update_model(self, model_id: str, model_data: ModelUpdate) -> Model:
+    def update_model(self, model_id: str, model_data: ModelsUpdate) -> Model:
         update_data = model_data.model_dump(exclude_unset=True)
         model = self.model_repository.update(model_id, **update_data)
         if not model:
