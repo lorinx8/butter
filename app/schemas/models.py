@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 
-class ModelBase(BaseModel):
+class ModelsBase(BaseModel):
     name: str
     provider: str
     deploy_name: str
@@ -20,11 +20,11 @@ class ModelBase(BaseModel):
         return v
 
 
-class ModelCreate(ModelBase):
+class ModelsCreate(ModelsBase):
     pass
 
 
-class ModelUpdate(BaseModel):
+class ModelsUpdate(BaseModel):
     name: Optional[str] = None
     provider: Optional[str] = None
     deploy_name: Optional[str] = None
@@ -40,7 +40,7 @@ class ModelUpdate(BaseModel):
         return v
 
 
-class ModelInDB(ModelBase):
+class ModelsInDB(ModelsBase):
     id: str
     created_at: datetime
     updated_at: Optional[datetime]

@@ -57,19 +57,15 @@ class BotManager:
         if not self.bot_pool:
             self.bot_pool = await BotPool.initialize()
 
-        # 初始化机器人
-        # 开始从数据库表中获取智能体信息，并将其加载到池中
-
-
     def __del__(self):
         """清理资源"""
         if hasattr(self, 'db'):
             self.db.close()
 
-
     # ------------------------------------------------------------
     # 获取智能体信息，并添加到池中
     # ------------------------------------------------------------
+
     async def load_bots_to_pool(self):
         """从数据库加载所有机器人并添加到池中"""
 
@@ -110,17 +106,18 @@ class BotManager:
                 continue
             # 得到提示词内容
             prompt_code = bot.properties.get('models_prompt_code')
-            prompt_content = self.prompt_service.get_prompt_content_by_code(prompt_code)
+            prompt_content = self.prompt_service.get_prompt_content_by_code(
+                prompt_code)
             # 检查是否存在
             if not prompt_content:
                 prompt_content = ''
 
             # 创建 BotConfig 实例
             bot_config = BotConfig(
-                bot_code = bot.code,
-                bot_name = bot.name,
-                deploy_name = deploy_name,
-                provider_code = model.provider,
+                bot_code=bot.code,
+                bot_name=bot.name,
+                deploy_name=deploy_name,
+                provider_code=model.provider,
                 model_properties=model.properties,
                 prompt_template=prompt_content,
 
@@ -138,10 +135,10 @@ class BotManager:
 
         logger.info(f"Loaded {len(bots)} bots into the pool")
 
-
     # ------------------------------------------------------------
     # 添加标准机器人
     # ------------------------------------------------------------
+
     def create_standard_bot(self, bot_data: BotStandardCreate) -> Dict:
         """
         创建标准机器人
@@ -186,19 +183,12 @@ class BotManager:
         prompt = self.prompt_service.get_prompt_by_code(prompt_code)
         return prompt is not None
 
-    async def chat(self, bot_id: str, session_id: str, message: str, stream: bool = False):
-        """处理聊天请求"""
-        await self._init_pools()
-
-        async with self.bot_pool.get_bot(bot_id) as bot:
-            if stream:
-                return await bot.chat_stream(session_id, message)
-            else:
-                return await bot.chat(session_id, message)
+    async def get_bot_instance(self, bot_id: str) -> BotStandard:
+        """获取机器人实例"""
+        return await self.bot_pool.get_bot(bot_id)
 
     async def remove_bot(self, bot_id: str):
         """移除机器人"""
-        await self._init_pools()
         await self.bot_pool.remove_bot(bot_id)
 
     async def refresh_pool(self):
@@ -213,55 +203,56 @@ class BotManager:
                 "BotManager not initialized. Call initialize() first")
 
         logger.info("Refreshing bot pool...")
-        
+
         # 获取数据库中的所有机器人
         db_bots = {bot.id: bot for bot in self.bot_service.get_bots()}
-        
+
         # 获取当前池中的所有机器人
         pool_bots = self.bot_pool._config.bot_configs
-        
+
         # 找出需要删除的机器人（在池中但不在数据库中）
         bots_to_remove = set(pool_bots.keys()) - set(db_bots.keys())
-        
+
         # 找出需要添加的机器人（在数据库中但不在池中）
         bots_to_add = set(db_bots.keys()) - set(pool_bots.keys())
-        
+
         # 找出需要更新的机器人（配置发生变化）
         bots_to_update = set()
         for bot_id in set(pool_bots.keys()) & set(db_bots.keys()):
             db_bot = db_bots[bot_id]
             pool_bot = pool_bots[bot_id]
-            
+
             # 检查配置是否发生变化
-            if (db_bot.properties != pool_bot.properties or 
-                db_bot.name != pool_bot.name or 
-                db_bot.code != pool_bot.code):
+            if (db_bot.properties != pool_bot.properties or
+                db_bot.name != pool_bot.name or
+                    db_bot.code != pool_bot.code):
                 bots_to_update.add(bot_id)
-        
+
         # 1. 移除已删除的机器人
         for bot_id in bots_to_remove:
             logger.info(f"Removing bot from pool: {bot_id}")
             await self.bot_pool.remove_bot(bot_id)
-        
+
         # 2. 添加新机器人
         for bot_id in bots_to_add:
             bot = db_bots[bot_id]
             logger.info(f"Adding new bot to pool: {bot.code} - {bot.name}")
-            
+
             # 获取模型和提示词配置
             deploy_name = bot.properties.get('models_deploy_name')
             if not deploy_name:
                 logger.warning(f"Bot {bot.code} has no deploy name")
                 continue
-                
+
             model = self.model_service.get_by_deploy_name(deploy_name)
             if not model:
                 logger.warning(f"Bot {bot.code} has no model")
                 continue
-                
+
             prompt_code = bot.properties.get('models_prompt_code')
-            prompt_content = self.prompt_service.get_prompt_content_by_code(prompt_code) or ''
-            
+            prompt_content = self.prompt_service.get_prompt_content_by_code(
+                prompt_code) or ''
+
             # 创建配置和实例
             bot_config = BotConfig(
                 bot_code=bot.code,
@@ -277,7 +268,7 @@ class BotManager:
             )
             bot_instance = BotStandard(bot_config)
             await self.bot_pool.add_bot(bot.id, bot, bot_instance)
-        
+
         # 3. 更新配置已改变的机器人
         for bot_id in bots_to_update:
             logger.info(f"Updating bot in pool: {bot_id}")
@@ -289,15 +280,16 @@ class BotManager:
             if not deploy_name:
                 logger.warning(f"Bot {bot.code} has no deploy name")
                 continue
-                
+
             model = self.model_service.get_by_deploy_name(deploy_name)
             if not model:
                 logger.warning(f"Bot {bot.code} has no model")
                 continue
-                
+
             prompt_code = bot.properties.get('models_prompt_code')
-            prompt_content = self.prompt_service.get_prompt_content_by_code(prompt_code) or ''
-            
+            prompt_content = self.prompt_service.get_prompt_content_by_code(
+                prompt_code) or ''
+
             bot_config = BotConfig(
                 bot_code=bot.code,
                 bot_name=bot.name,
@@ -312,9 +304,10 @@ class BotManager:
             )
             bot_instance = BotStandard(bot_config)
             await self.bot_pool.add_bot(bot.id, bot, bot_instance)
-        
-        logger.info(f"Bot pool refresh completed. Removed: {len(bots_to_remove)}, Added: {len(bots_to_add)}, Updated: {len(bots_to_update)}")
-        
+
+        logger.info(
+            f"Bot pool refresh completed. Removed: {len(bots_to_remove)}, Added: {len(bots_to_add)}, Updated: {len(bots_to_update)}")
+
         return {
             "removed": len(bots_to_remove),
             "added": len(bots_to_add),
