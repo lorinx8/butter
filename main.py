@@ -1,7 +1,10 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.core.doc_htmls import ElementsHtml
 from app.managers.llm.model_pool import ModelPool
 from app.core.exception_handlers import http_exception_handler, general_exception_handler
 from app.core.config import settings
@@ -13,6 +16,8 @@ from app.middleware.access_log import access_log_middleware
 from app.managers.bot.bot_manager import BotManager
 from app.managers.bot.bot_pool import BotPool
 
+env = os.getenv("ENV")
+env_is_production = env != "local"
 
 # 检查数据库配置
 settings.check_database_config()
@@ -38,8 +43,10 @@ async def lifespan(fastapi_app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if not env_is_production else None
 )
 
 # 添加异常处理器
@@ -61,6 +68,12 @@ app.middleware("http")(access_log_middleware)
 # 包含路由
 app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR)
 app.include_router(common_routes.router, prefix=settings.COMMON_API_V1_STR)
+
+if not env_is_production:
+    @app.get("/docs", response_class=HTMLResponse)
+    async def api_docs():
+        return ElementsHtml.BASIC
+
 
 if __name__ == "__main__":
     import uvicorn
