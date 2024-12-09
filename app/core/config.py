@@ -61,6 +61,8 @@ class Settings(BaseSettings):
     # App Settings
     PROJECT_NAME: str = get_yaml_value(_yaml_config, 'app', 'name')
 
+    API_V1_STR: str = ''
+
     # API Settings
     APP_API_V1_STR: str = get_yaml_value(
         _yaml_config, 'app', 'api_prefixs', 'app')
@@ -102,7 +104,7 @@ class Settings(BaseSettings):
         """获取uvicorn端口"""
         port = os.getenv("PORT")
         if port:
-            return safe_int(port)
+            return safe_int(port, 8000)
         else:
             return safe_int(
                 get_yaml_value(self._yaml_config, 'app', 'uvicorn_port'), 8000)

@@ -1,0 +1,16 @@
+[MASTER]
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    R0903,  # too-few-public-methods
+    W0613,   # unused-argument (因为路径参数)
+    W0703,  # broad-except
+
+[FORMAT]
+max-line-length=120
+
+[TYPECHECK]
+# FastAPI 相关设置
+ignored-classes=
+    SQLAlchemy,
+    scoped_session

@@ -1,20 +1,20 @@
-from fastapi import APIRouter, Depends, Query
-from typing import List
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.security import verify_token
 from app.core.response import success_response, error_response
 from app.core.error_code import ErrorCode
 from app.repositories.prompt_repository import PromptRepository
 from app.services.prompt_service import PromptService
-from app.schemas.prompt import PromptCreate, PromptInDB, PromptUpdate
+from app.schemas.prompt import PromptCreate, PromptUpdate
 
 router = APIRouter()
+
 
 def get_prompt_service(db: Session = Depends(get_db)):
     return PromptService(PromptRepository(db))
 
-@router.post("/prompts/")
+
+@router.post("/prompts")
 async def create_prompt(
     prompt_data: PromptCreate,
     prompt_service: PromptService = Depends(get_prompt_service)
@@ -27,7 +27,8 @@ async def create_prompt(
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
-@router.get("/prompts/")
+
+@router.get("/prompts")
 async def get_prompts(
     skip: int = 0,
     limit: int = 100,
@@ -38,6 +39,7 @@ async def get_prompts(
         return success_response(data=prompts)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.get("/prompts/{prompt_id}")
 async def get_prompt(
@@ -51,6 +53,7 @@ async def get_prompt(
         return success_response(data=prompt)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.put("/prompts/{prompt_id}")
 async def update_prompt(
@@ -67,6 +70,7 @@ async def update_prompt(
         return error_response(ErrorCode.INVALID_PARAMS, str(e))
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
+
 
 @router.delete("/prompts/{prompt_id}")
 async def delete_prompt(

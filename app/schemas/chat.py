@@ -1,20 +1,17 @@
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel
 
-# 消息
-class Message(BaseModel):
-    role: str
-    content: str
 
-# 聊天请求
-class ChatRequest(BaseModel):
-    # 模型
+class ModelChatRequest(BaseModel):
+    """Admin chat request schema"""
     model: str
-    # 消息
-    messages: List[Message]
-    # 是否流式输出
+    messages: List[Dict[str, str]]
     stream: bool = False
 
-# 聊天响应
-class ChatResponse(BaseModel):
-    message: str 
+
+class BotChatRequest(BaseModel):
+    """Bot chat request schema"""
+    bot_id: str
+    session_id: str
+    messages: str
+    stream: bool = False
