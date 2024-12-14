@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 import platform
 import os
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
+
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
 
 router = APIRouter()
 

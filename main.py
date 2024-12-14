@@ -4,17 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.core.doc_htmls import ElementsHtml
-from app.managers.llm.model_pool import ModelPool
-from app.core.exception_handlers import http_exception_handler, general_exception_handler
+from app.core.docs.templates import ElementsHtml
+from app.core.exceptions.handlers import http_exception_handler, general_exception_handler
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
-from app.core.database import init_db
-from app.middleware.access_log import access_log_middleware
-from app.managers.bot.bot_manager import BotManager
-from app.managers.bot.bot_pool import BotPool
+from app.core.database.db_base import init_db
+from app.core.middleware.access_log import access_log_middleware
+from app.modules.bot.business.bot_manager import BotManager
+from app.modules.llm.business.model_pool import ModelPool
 
 env = os.getenv("ENV")
 env_is_production = env != "local"

@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 from loguru import logger
-import json
 
 def setup_logging():
     # 移除默认的处理器

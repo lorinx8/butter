@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.admin_user_repository import AdminUserRepository
-from app.services.user_service import UserService
-from app.schemas.user import UserCreate, UserUpdate, UserLogin
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+
+from app.modules.auth.repositories import AdminUserRepository
+from app.modules.auth.services import UserService, create_user_token
+from app.modules.auth.schemas import UserCreate, UserUpdate, UserLogin
 
 router = APIRouter()
 
@@ -31,7 +33,7 @@ async def create_user(
 
 @router.get("/admin-users")
 async def get_users(
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):
     try:
@@ -44,7 +46,7 @@ async def get_users(
 @router.get("/admin-users/{user_id}")
 async def get_user(
     user_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):
     try:
@@ -60,7 +62,7 @@ async def get_user(
 async def update_user(
     user_id: str,
     user_data: UserUpdate,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):
     try:
@@ -75,7 +77,7 @@ async def update_user(
 @router.delete("/admin-users/{user_id}")
 async def delete_user(
     user_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     user_service: UserService = Depends(get_user_service)
 ):
     try:
@@ -100,7 +102,7 @@ async def login(
                 ErrorCode.LOGIN_FAILED,
                 "Incorrect email or password"
             )
-        token = user_service.create_user_token(user)
+        token = create_user_token(user)
         return success_response(data=token)
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))

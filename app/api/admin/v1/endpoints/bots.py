@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.bot_repository import BotRepository
-from app.services.bot_service import BotService
-from app.schemas.bot import BotStandardCreate, BotUpdate
-from app.managers.bot.bot_manager import BotManager
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+from app.modules.bot.business.bot_manager import BotManager
+from app.modules.bot.repositories import BotRepository
+from app.modules.bot.schemas import BotStandardCreate, BotUpdate
+from app.modules.bot.services import BotService
+
 router = APIRouter()
 
 

@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.dict_group_repository import DictGroupRepository
-from app.services.dict_group_service import DictGroupService
-from app.schemas.dict import DictGroupCreate, DictGroupUpdate
+
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+
+from app.modules.dict.repositories import DictGroupRepository
+from app.modules.dict.services import DictGroupService
+from app.modules.dict.schemas import DictGroupCreate, DictGroupUpdate
 
 router = APIRouter()
 

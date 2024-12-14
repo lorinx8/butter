@@ -1,12 +1,13 @@
 from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.model_provider_repository import ModelProviderRepository
-from app.services.model_provider_service import ModelProviderService
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+from app.modules.llm.repositories import ModelProviderRepository
+from app.modules.llm.services import ModelProviderService
 
 router = APIRouter()
 
@@ -19,7 +20,7 @@ def get_provider_service(db: Session = Depends(get_db)):
 async def get_providers(
     skip: int = 0,
     limit: int = 100,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     provider_service: ModelProviderService = Depends(get_provider_service)
 ):
     try:
@@ -32,7 +33,7 @@ async def get_providers(
 @router.get("/model-providers/{provider_id}")
 async def get_provider(
     provider_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     provider_service: ModelProviderService = Depends(get_provider_service)
 ):
     try:
@@ -47,7 +48,7 @@ async def search_providers(
     code: Optional[str] = None,
     name: Optional[str] = None,
     is_active: Optional[bool] = None,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     provider_service: ModelProviderService = Depends(get_provider_service)
 ):
     try:

@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.model_repository import ModelRepository
-from app.services.model_service import ModelService
-from app.schemas.models import ModelsCreate, ModelsUpdate
-from app.repositories.model_provider_repository import ModelProviderRepository
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+from app.modules.llm.repositories import ModelRepository, ModelProviderRepository
+from app.modules.llm.schemas import ModelsCreate, ModelsUpdate
+from app.modules.llm.services import ModelService
 
 router = APIRouter()
 
@@ -50,7 +50,7 @@ async def get_models(
 @router.get("/models/{model_id}")
 async def get_model(
     model_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     model_service: ModelService = Depends(get_model_service)
 ):
     try:

@@ -13,9 +13,10 @@
 """
 
 from fastapi import APIRouter, Depends
-from app.core.security import verify_token
-from app.managers.bot.bot_manager import BotManager
-from app.core.response import success_response
+
+from app.core.auth.security import verify_token
+from app.core.schemas.response import success_response
+from app.modules.bot.business.bot_manager import BotManager
 
 router = APIRouter()
 

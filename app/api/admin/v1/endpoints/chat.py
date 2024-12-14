@@ -12,13 +12,14 @@
 @version: 1.0
 """
 
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from app.schemas.chat import ModelChatRequest, BotChatRequest
-from app.core.security import verify_token
-from app.core.response import success_response
-from app.managers.chat.basic_chat import BasicChat
-from app.managers.chat.bot_chat import BotChat
+
+from app.core.auth.security import verify_token
+from app.core.schemas.response import success_response
+from app.modules.chat.business.basic_chat import BasicChat
+from app.modules.chat.business.bot_chat import BotChat
+from app.modules.chat.schemas import ModelChatRequest, BotChatRequest
 
 router = APIRouter()
 

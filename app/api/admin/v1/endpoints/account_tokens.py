@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.account_token_repository import AccountTokenRepository
-from app.services.account_token_service import AccountTokenService
-from app.schemas.account_token import AccountTokenCreate, AccountTokenUpdate
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+
+from app.modules.auth.repositories import AccountTokenRepository
+from app.modules.auth.schemas import AccountTokenCreate, AccountTokenUpdate
+from app.modules.auth.services import AccountTokenService
 
 router = APIRouter()
 
@@ -33,7 +35,7 @@ async def create_token(
 async def get_tokens(
     skip: int = 0,
     limit: int = 100,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     token_service: AccountTokenService = Depends(get_token_service)
 ):
     try:
@@ -46,7 +48,7 @@ async def get_tokens(
 @router.get("/account-tokens/{token_id}")
 async def get_token(
     token_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     token_service: AccountTokenService = Depends(get_token_service)
 ):
     try:
@@ -61,13 +63,13 @@ async def get_token(
 @router.get("/accounts/{account_id}/tokens")
 async def get_account_tokens(
     account_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     token_service: AccountTokenService = Depends(get_token_service)
 ):
     try:
         tokens = token_service.get_account_tokens(account_id)
         return success_response(data=tokens)
-    except ValueError as e:
+    except ValueError:
         return error_response(ErrorCode.NOT_FOUND, f"Account {account_id} not found")
     except Exception as e:
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
@@ -77,7 +79,7 @@ async def get_account_tokens(
 async def update_token(
     token_id: str,
     token_data: AccountTokenUpdate,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     token_service: AccountTokenService = Depends(get_token_service)
 ):
     try:
@@ -94,7 +96,7 @@ async def update_token(
 @router.delete("/account-tokens/{token_id}")
 async def delete_token(
     token_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     token_service: AccountTokenService = Depends(get_token_service)
 ):
     try:

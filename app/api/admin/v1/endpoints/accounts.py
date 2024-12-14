@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.security import verify_token
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.account_repository import AccountRepository
-from app.services.account_service import AccountService
-from app.schemas.account import AccountCreate, AccountUpdate
+
+from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+
+from app.modules.auth.repositories import AccountRepository
+from app.modules.auth.schemas import AccountCreate, AccountUpdate
+from app.modules.auth.services import AccountService
 
 router = APIRouter()
 
@@ -33,7 +35,7 @@ async def create_account(
 async def get_accounts(
     skip: int = 0,
     limit: int = 100,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     account_service: AccountService = Depends(get_account_service)
 ):
     try:
@@ -46,7 +48,7 @@ async def get_accounts(
 @router.get("/accounts/{account_id}")
 async def get_account(
     account_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     account_service: AccountService = Depends(get_account_service)
 ):
     try:
@@ -62,7 +64,7 @@ async def get_account(
 async def update_account(
     account_id: str,
     account_data: AccountUpdate,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     account_service: AccountService = Depends(get_account_service)
 ):
     try:
@@ -79,7 +81,7 @@ async def update_account(
 @router.delete("/accounts/{account_id}")
 async def delete_account(
     account_id: str,
-    token: dict = Depends(verify_token),
+    _: dict = Depends(verify_token),
     account_service: AccountService = Depends(get_account_service)
 ):
     try:

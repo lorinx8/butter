@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.response import success_response, error_response
-from app.core.error_code import ErrorCode
-from app.repositories.prompt_repository import PromptRepository
-from app.services.prompt_service import PromptService
-from app.schemas.prompt import PromptCreate, PromptUpdate
+
+from app.core.database.db_base import get_db
+from app.core.schemas.error_code import ErrorCode
+from app.core.schemas.response import success_response, error_response
+from app.modules.prompt.repositories import PromptRepository
+from app.modules.prompt.schemas import PromptCreate, PromptUpdate
+from app.modules.prompt.services import PromptService
 
 router = APIRouter()
 
