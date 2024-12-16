@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 @router.post("/chat/completions")
-async def admin_chat(
+async def chat(
     request: ModelChatRequest,
     _: dict = Depends(verify_token),  # Ensure admin access
 ):
@@ -36,11 +36,12 @@ async def admin_chat(
     """
     if request.stream:
         async def generate():
-            async for chunk in BasicChat.chat(
+            chat_iterator = await BasicChat.chat(
                 deploy_name=request.model,
                 messages=request.messages,
                 stream=True
-            ):
+            )
+            async for chunk in chat_iterator:
                 yield f"data: {chunk}\n\n"
         return StreamingResponse(generate(), media_type="text/event-stream")
     else:
@@ -53,7 +54,7 @@ async def admin_chat(
 
 
 @router.post("/bot/chat/completions")
-async def bot_chat_stream(
+async def bot_chat(
     request: BotChatRequest,
     _: dict = Depends(verify_token),
 ):
@@ -61,14 +62,23 @@ async def bot_chat_stream(
     机器人流式聊天接口
     """
     if request.stream:
-        bot_id = request.bot_id
-        messages = request.messages
-        return StreamingResponse(
-            BotChat.chat(bot_id, messages, stream=True),
-            media_type="text/event-stream")
+        async def generate():
+            # 先获取异步迭代器
+            chat_iterator = await BotChat.chat(
+                request.bot_id,
+                session_id=request.session_id,
+                messages=request.messages,
+                stream=True
+            )
+            # 对迭代器进行迭代
+            async for chunk in chat_iterator:
+                yield f"data: {chunk}\n\n"
+        return StreamingResponse(generate(), media_type="text/event-stream")
     else:
-        bot_id = request.bot_id
-        session_id = request.session_id
-        messages = request.messages
-        response = await BotChat.chat(bot_id, session_id, messages)
+        response = await BotChat.chat(
+            request.bot_id,
+            request.session_id,
+            request.messages,
+            stream=False
+        )
         return success_response(data={"message": response})

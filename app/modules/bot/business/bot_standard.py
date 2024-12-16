@@ -4,7 +4,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START
 from langchain_core.messages import HumanMessage, SystemMessage, trim_messages
 from langgraph.checkpoint.postgres import PostgresSaver
-from psycopg import Connection
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg import AsyncConnection
 import json
 from app.core.config import settings
 
@@ -23,8 +24,8 @@ class BotConfig:
     memory_max_tokens: Optional[int] = None     # 最大token数
     memory_max_rounds: Optional[int] = None     # 最大消息轮数
     temperature: float = 0.7                    # 温度
-    max_tokens: int = 2000                      # 最大token数
-    max_retries: int = 2                        # 最大重试次数
+    max_retries: int = 3                        # 最大重试次数
+
 
 class BotStandard:
     """标准机器人实现"""
@@ -32,14 +33,25 @@ class BotStandard:
     def __init__(self, config: BotConfig):
         # 配置信息
         self.config = config
-
-        # bot basic info
         self.bot_name = config.bot_name
 
-        # memory
+        # 初始化为None
         self.checkpoint = None
+        self.app = None
+        self.conn = None
+        self.model = self._create_model()
+
+    async def initialize(self):
+        """异步初始化"""
         if self.config.memory_enable:
-            self.checkpoint = self._create_checkpoint()
+            # 初始化数据库连接
+            connection_kwargs = {
+                "autocommit": True,
+                "prepare_threshold": 0,
+            }
+            self.conn = await AsyncConnection.connect(settings.DATABASE_URI, **connection_kwargs)
+            self.checkpoint = AsyncPostgresSaver(self.conn)
+            await self.checkpoint.setup()
 
         # langgraph
         self.workflow = StateGraph(MessagesState)
@@ -47,22 +59,35 @@ class BotStandard:
         self.workflow.add_edge(START, "call_model")
         self.app = self.workflow.compile(checkpointer=self.checkpoint)
 
-        # 初始化模型
-        self.model = self._create_model()
+    async def cleanup(self):
+        """清理资源"""
+        if self.conn:
+            await self.conn.close()
 
-    def _create_checkpoint(self):
+    def __del__(self):
+        """析构函数"""
+        if self.conn and not self.conn.closed:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self.cleanup())
+                else:
+                    loop.run_until_complete(self.cleanup())
+            except Exception:
+                pass  # 忽略清理过程中的错误
+
+    async def _create_checkpoint(self):
         """初始化检查点"""
         # 初始化数据库连接
         connection_kwargs = {
             "autocommit": True,
             "prepare_threshold": 0,
         }
-        conn = Connection.connect(
-            settings.DATABASE_URI, **connection_kwargs)
-        checkpoint = PostgresSaver(conn)
-        checkpoint.setup()
-        return checkpoint
-
+        async with await AsyncConnection.connect(settings.DATABASE_URI, **connection_kwargs) as conn:
+            checkpoint = AsyncPostgresSaver(conn)
+            await checkpoint.setup()
+            return checkpoint
 
     def __call_model(self, state: MessagesState, config: dict):
         """调用模型"""
@@ -90,9 +115,9 @@ class BotStandard:
         if self.config.memory_strategy == "tokens":
             return trim_messages(
                 messages,
-                strategy="token",
+                strategy="last",
                 token_counter=self.model,
-                max_tokens=self.config.memory_max_tokens or self.config.max_tokens,
+                max_tokens=self.config.memory_max_tokens,
                 include_system=True,
                 start_on="human",
                 end_on=("human", "tool"),
@@ -115,7 +140,7 @@ class BotStandard:
         config = {
             "configurable": {"thread_id": session_id}
         }
-        final_state = self.app.invoke(
+        final_state = await self.app.ainvoke(
             {"messages": input_message}, config=config)
         return final_state["messages"][-1].content
 
@@ -126,17 +151,12 @@ class BotStandard:
             "configurable": {"thread_id": session_id}
         }
         async for msg, _ in self.app.astream(
-            {"messages": [input_message]},
+            {"messages": input_message},
             stream_mode="messages",
             config=config
         ):
-            yield json.dumps({"content": msg.content})
+            yield json.dumps({"content": msg.content}, ensure_ascii=False)
         yield json.dumps({"content": "[END]"})
-
-    def __del__(self):
-        """清理资源"""
-        if hasattr(self, 'conn'):
-            self.conn.close()
 
     def _create_model(self) -> ChatOpenAI:
         """创建模型实例"""
@@ -146,7 +166,6 @@ class BotStandard:
                 base_url=self.config.model_properties.get('base_url'),
                 openai_api_key=self.config.model_properties.get('api_key'),
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens,
                 max_retries=self.config.max_retries
             )
         # TODO: 支持其他模型提供商

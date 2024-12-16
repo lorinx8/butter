@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 import asyncio
 from fastapi import HTTPException
+from contextlib import asynccontextmanager
 
 from app.core.database.db_base import SessionLocal
 from app.core.logging import logger
@@ -129,6 +130,7 @@ class BotManager:
 
             # 创建 BotStandard 实例
             bot_instance = BotStandard(bot_config)
+            await bot_instance.initialize()
 
             # 将机器人添加到池中
             await self.bot_pool.add_bot(bot.id, bot, bot_instance)
@@ -147,7 +149,7 @@ class BotManager:
         - 验证提示词是否存在
         - 创建机器人记录
         """
-        # 验证机器人类型
+        # 验证器人类型
         if bot_data.bot_type != "standard":
             raise HTTPException(
                 status_code=400,
@@ -183,9 +185,18 @@ class BotManager:
         prompt = self.prompt_service.get_prompt_by_code(prompt_code)
         return prompt is not None
 
-    async def get_bot_instance(self, bot_id: str) -> BotStandard:
-        """获取机器人实例"""
-        return await self.bot_pool.get_bot(bot_id)
+    @asynccontextmanager
+    async def get_bot_instance(self, bot_id: str):
+        """
+        获取机器人实例的异步上下文管理器
+        """
+        async with self.bot_pool.get_bot(bot_id) as bot:
+            if not bot:
+                raise ValueError(f"Bot {bot_id} not found")
+            try:
+                yield bot
+            finally:
+                pass
 
     async def remove_bot(self, bot_id: str):
         """移除机器人"""

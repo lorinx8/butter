@@ -103,6 +103,12 @@ class BotPool:
             if self.has_bot(bot_id):
                 semaphore = await self.get_semaphore(bot_id)
                 async with semaphore:
+                    # 获取机器人实例并清理
+                    bot_instance = self._config.bot_instances.get(bot_id)
+                    if bot_instance:
+                        await bot_instance.cleanup()
+                    
+                    # 从池中移除
                     self._config.bot_instances.pop(bot_id)
                     self._config.bot_configs.pop(bot_id)
                     self._config.semaphores.pop(bot_id)
@@ -118,6 +124,7 @@ class BotPool:
                 'bot_id': bot_id,
                 'name': config.name,
                 'type': config.bot_type,
+                'properties': config.properties,
                 'concurrency_limit': self.DEFAULT_POOL_SIZE,
                 'available_slots': available_slots
             })

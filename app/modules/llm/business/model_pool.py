@@ -271,6 +271,7 @@ class ModelPool:
                 'deploy_name': deploy_name,
                 'name': config.name,
                 'provider': config.provider,
+                'properties': config.properties,
                 'concurrency_limit': self.DEFAULT_POOL_SIZE,
                 'available_slots': available_slots
             })
