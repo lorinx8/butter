@@ -13,8 +13,10 @@
 """
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from app.core.auth.security import verify_token
+from app.core.database.db_base import get_db
 from app.core.schemas.response import success_response
 from app.modules.bot.business.bot_manager import BotManager
 
@@ -23,35 +25,36 @@ router = APIRouter()
 
 @router.get("/bot-pool/status")
 async def get_pool_status(
-    _: dict = Depends(verify_token)
-):
+    db: Session = Depends(get_db),
+    _: dict = Depends(verify_token)):
     """
     获取机器人池状态
     - 返回所有机器人的状态信息，包括并发限制和可用槽位
     """
-    manager = await BotManager.get_instance()
-    status = await manager.bot_pool.get_pool_status()
+    manager = await BotManager.get_instance(db)
+    status = await manager.get_pool_status()
     return success_response(data=status)
 
 
 @router.post("/bot-pool/refresh")
 async def refresh_pool(
-    _: dict = Depends(verify_token)
-):
+    db: Session = Depends(get_db),
+    _: dict = Depends(verify_token)):
     """
     刷新机器人池
     - 同步数据库中的机器人到机器人池
     - 添加新机器人，移除已删除机器人
     - 如果配置有改变，重新加载配置
     """
-    manager = await BotManager.get_instance()
+    manager = await BotManager.get_instance(db)
     result = await manager.refresh_pool()
     return success_response(data=result)
 
 
-@router.post("/bot-pool/refresh/{bot_id}")
+@router.post("/bot-pool/refresh/{bot_code}")
 async def refresh_bot(
-    bot_id: str,
+    bot_code: str,
+    db: Session = Depends(get_db),
     _: dict = Depends(verify_token)
 ):
     """
@@ -59,11 +62,12 @@ async def refresh_bot(
     - 根据bot_id刷新指定机器人的实例
     - 使用数据库中的最新配置更新机器人
     Args:
-        bot_id: 机器人的ID
+        bot_code: 机器人的ID
+        _: 验证token
+    Returns:
+        返回成功响应
     """
-    manager = await BotManager.get_instance()
+    manager = await BotManager.get_instance(db)
     # 先移除旧的机器人实例
-    await manager.remove_bot(bot_id)
-    # 重新加载机器人到池中
-    await manager.load_bots_to_pool()
-    return success_response(message=f"Successfully refreshed bot {bot_id}")
+    await manager.refresh_bot(bot_code)
+    return success_response(message=f"Successfully refreshed bot {bot_code}")

@@ -1,6 +1,6 @@
-from http.client import HTTPException
 from typing import Optional, List, Dict
 
+from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.modules.llm.models import ModelProvider, Model

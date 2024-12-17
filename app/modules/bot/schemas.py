@@ -9,6 +9,7 @@ class BotBase(BaseModel):
     bot_type: str
     properties: Optional[Dict] = None
     description: Optional[str] = None
+    version: str
 
 
 class BotStandardProperties(BaseModel):

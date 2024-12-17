@@ -13,3 +13,4 @@ class Bot(BaseModel):
     bot_type = Column(String(50), nullable=False)  # standard, customized
     properties = Column(JSONB)
     description = Column(Text)
+    version = Column(String(50), nullable=False)

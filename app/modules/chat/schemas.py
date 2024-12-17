@@ -11,7 +11,7 @@ class ModelChatRequest(BaseModel):
 
 class BotChatRequest(BaseModel):
     """Bot chat request schema"""
-    bot_id: str
+    bot_code: str
     session_id: str
     messages: str
     stream: bool = False

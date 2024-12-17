@@ -23,11 +23,11 @@ class BotChat:
         return await BotChat.chat_sync(bot_id, session_id, messages)
 
     @staticmethod
-    async def chat_sync(bot_id: str, session_id: str, messages: str) -> str:
+    async def chat_sync(bot_code: str, session_id: str, messages: str) -> str:
         """执行同步聊天"""
         try:
             bot_manager = await BotManager.get_instance()
-            async with bot_manager.get_bot_instance(bot_id) as bot:
+            async with bot_manager.get_bot_instance(bot_code) as bot:
                 response = await bot.chat(session_id, messages)
                 return response
         except Exception as e:
