@@ -5,24 +5,24 @@
 TRUNCATE TABLE admin_user CASCADE;
 
 -- 插入超级管理员
-INSERT INTO "public"."admin_user" ("id", "email", "telephone", "username", "hashed_password", "is_active", "created_at", "updated_at")
-    VALUES ('6fa81b4c-6d46-4697-9297-e2175efc464c', 'lconline@163.com', NULL, 'linchao', '$2b$12$BUNFlUJ1IAdQj8DDY7eOJ.hgSBY3RDNVr/u6gjpcDgFxbnTPxckKa', 't', '2024-11-20 14:16:37.826762+08', NULL);
+INSERT INTO "public"."admin_user" ("email", "telephone", "username", "hashed_password", "is_active")
+    VALUES ('lconline@163.com', NULL, 'linchao', '$2b$12$BUNFlUJ1IAdQj8DDY7eOJ.hgSBY3RDNVr/u6gjpcDgFxbnTPxckKa', 't');
 
 
+-- ----------------------------
+-- Records of model_provider
+-- ----------------------------
 -- 清空现有数据
 TRUNCATE TABLE model_provider CASCADE;
 
 -- 插入OpenAI提供商
-INSERT INTO model_provider (
-    id, 
-    code, 
-    name, 
-    metadatas, 
-    description, 
-    is_active, 
-    created_at
+INSERT INTO "public"."model_provider" (
+    "code", 
+    "name", 
+    "metadatas", 
+    "description", 
+    "is_active"
 ) VALUES (
-    'b6d14900-a7c8-4040-b4c9-d58b16b0908d',
     'openai',
     'OpenAI',
     '[
@@ -43,21 +43,9 @@ INSERT INTO model_provider (
         }
     ]'::jsonb,
     'OpenAI API provider including GPT-3.5, GPT-4 models',
-    true,
-    CURRENT_TIMESTAMP
-);
-
--- 插入Anthropic提供商
-INSERT INTO model_provider (
-    id, 
-    code, 
-    name, 
-    metadatas, 
-    description, 
-    is_active, 
-    created_at
-) VALUES (
-    'c7e15011-b8c9-5151-c5d9-e69c27c11a9e',
+    't'
+),
+(
     'anthropic',
     'Anthropic',
     '[
@@ -73,21 +61,9 @@ INSERT INTO model_provider (
         }
     ]'::jsonb,
     'Anthropic API provider including Claude models',
-    true,
-    CURRENT_TIMESTAMP
-);
-
--- 插入Azure OpenAI提供商
-INSERT INTO model_provider (
-    id, 
-    code, 
-    name, 
-    metadatas, 
-    description, 
-    is_active, 
-    created_at
-) VALUES (
-    'd8f26122-c9d0-6262-d6e0-f70d38d22b0f',
+    't'
+),
+(
     'azure',
     'Azure OpenAI',
     '[
@@ -113,21 +89,9 @@ INSERT INTO model_provider (
         }
     ]'::jsonb,
     'Azure OpenAI Service provider',
-    true,
-    CURRENT_TIMESTAMP
-);
-
--- 插入Gemini提供商
-INSERT INTO model_provider (
-    id, 
-    code, 
-    name, 
-    metadatas, 
-    description, 
-    is_active, 
-    created_at
-) VALUES (
-    'e9f37233-d0e1-7373-e7f1-g81e49e33c1g',
+    't'
+),
+(
     'gemini',
     'Google Gemini',
     '[
@@ -143,21 +107,9 @@ INSERT INTO model_provider (
         }
     ]'::jsonb,
     'Google Gemini API provider',
-    true,
-    CURRENT_TIMESTAMP
-);
-
--- 插入Ollama提供商
-INSERT INTO model_provider (
-    id, 
-    code, 
-    name, 
-    metadatas, 
-    description, 
-    is_active, 
-    created_at
-) VALUES (
-    'f0g48344-e1f2-8484-f8g2-h92f50f44d2h',
+    't'
+), 
+(
     'ollama',
     'Ollama',
     '[
@@ -168,12 +120,15 @@ INSERT INTO model_provider (
         }
     ]'::jsonb,
     'Ollama local API provider',
-    true,
-    CURRENT_TIMESTAMP
+    't'
 );
 
 
-INSERT INTO "public"."prompt" ("id", "code", "name", "content", "description", "is_active", "created_at", "updated_at") VALUES ('51211012-f269-4a7e-a944-60a53f3a01e0', 'prompt-20241126174648-EqSH', '小青同学提示词', '你是一个温柔、耐心、善解人意的小姑娘，你叫林青婉，人称小青同学。
+-- ----------------------------
+-- Records of prompt
+-- ----------------------------
+INSERT INTO "public"."prompt" ("code", "name", "content", "description", "is_active") 
+VALUES ('prompt-20241126174648-EqSH', '小青同学提示词', '你是一个温柔、耐心、善解人意的小姑娘，你叫林青婉，人称小青同学。
 以下是你的个人设定:
 1.你的职业是一位老年人的情感陪护师，为老年人提供情绪价值，跟他们聊天。但你不需要直接告诉他们这些。
 2.同时你精通医学常识，知道常见病的症状表现、居家处理方式；你精通身体保健知识，可以提供身体保健建议；你还精通心理学，可以提供心理健康开导。
@@ -192,4 +147,4 @@ INSERT INTO "public"."prompt" ("id", "code", "name", "content", "description", "
 以下是你要注意的地方，请你遵守，否则你将受到惩罚：
 1.当初次和用户对话的时候，你会先问用户的姓名和称呼，以便以后使用。
 2.你只使用中文来作答，并且是口语化、生活化的语句，给出建议的时候，不能机械地罗列第一点、第二点、第三点等。不能输出带有格式标记的文字，例如Markdown。
-3.在聊天过程中，不能总是重复说：“有什么需要随时可以和我聊”、“有没有什么想和我聊聊的”，或者类似意思的话。', '小青同学提示词1126', 't', '2024-11-26 17:46:48.987381+08', NULL);
+3.在聊天过程中，不能总是重复说：“有什么需要随时可以和我聊”、“有没有什么想和我聊聊的”，或者类似意思的话。', '小青同学提示词1126', 't');

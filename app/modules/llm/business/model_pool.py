@@ -12,11 +12,8 @@ from asyncio_pool import AioPool
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
-from app.core.database.db_base import SessionLocal
 from app.core.logging import logger
 from app.modules.llm.models import Model
-from app.modules.llm.repositories import ModelRepository, ModelProviderRepository
-from app.modules.llm.services import ModelService
 
 
 @dataclass
@@ -54,23 +51,7 @@ class ModelPool:
     def __init__(self):
         """初始化方法是私有的，请使用 get_instance() 或 initialize() 方法获取实例"""
         # 初始化服务和依赖
-        self._db = SessionLocal()
-        self.model_repository = ModelRepository(self._db)
-        self.provider_repository = ModelProviderRepository(self._db)
-        self.model_service = ModelService(
-            self.model_repository, self.provider_repository)
-
-        # 使用数据类来管理配置
         self._config = ModelPoolConfig()
-
-    def get_db(self):
-        """获取数据库会话"""
-        return self._db
-
-    def close_db(self):
-        """关闭数据库连接"""
-        if self._db:
-            self._db.close()
 
     @classmethod
     async def initialize(cls) -> 'ModelPool':
@@ -79,7 +60,6 @@ class ModelPool:
             if not cls._instance:
                 cls._instance = cls()
                 cls._initialized = True
-                await cls._instance.initialize_pools()
             return cls._instance
 
     @classmethod
@@ -90,11 +70,10 @@ class ModelPool:
                 "ModelPool not initialized. Call initialize() first")
         return cls._instance
 
-    async def initialize_pools(self):
+    async def initialize_pools(self, models: Optional[List[Model]] = None):
         """初始化所有模型池"""
         async with self._config.instance_lock:
-            active_models = self.model_service.get_active_models()
-            for model in active_models:
+            for model in models:
                 await self._initialize_model(model)
 
     async def _initialize_model(self, model: Model):
@@ -161,52 +140,35 @@ class ModelPool:
             # 这里可以添加一些清理逻辑，如果需要的话
             pass
 
-    async def refresh_model(self, deploy_name: str):
-        """
-        刷新指定模型
-        - 如果模型在池中存在，使用最新配置更新模型
-        - 如果模型在池中不存在但在数据库中存在，则添加到池中
-        - 如果模型在数据库中不存在，则抛出异常
-        Args:
-            deploy_name: 模型的部署名称
-        Raises:
-            ValueError: 当模型在数据库中不存在时抛出
-        """
+    async def refresh_model(self, deploy_name: str, model: Model) -> str:
+        """刷新指定模型"""
         async with self._config.instance_lock:
-            # 获取最新的模型配置
-            model = self.model_service.get_by_deploy_name(deploy_name)
-            if not model:
-                raise ValueError(f"Model {deploy_name} not found in database")
-
             # 检查模型是否在池中
             if not self.has_model(deploy_name):
                 # 模型不在池中但在数据库中存在，添加到池中
                 await self._initialize_model(model)
                 logger.info(f"Added new model to pool: {deploy_name}")
-                return
+                return 'Added new model to pool: {}'.format(deploy_name)
 
             # 模型在池中存在，更新配置
             # 等待当前任务完成
             semaphore = await self.get_semaphore(deploy_name)
             async with semaphore:
                 # 更新模型实例
-                self._config.model_instances[deploy_name] = self._create_model_instance(model)
+                self._config.model_instances[deploy_name] = self._create_model_instance(
+                    model)
                 self._config.model_configs[deploy_name] = model
                 logger.info(f"Refreshed model {deploy_name}")
+                return 'Refreshed model {}'.format(deploy_name)
 
-    async def refresh_pool(self) -> Dict[str, List[str]]:
-        """
-        刷新模型池，比较数据库中的模型和池中的模型
-        - 如果有新模型则添加到池中
-        - 如果有已删除的模型则从池中移除
-        - 如果现有模型配置发生变化则重新加载配置
-        Returns:
-            Dict包含添加、移除和更新的模型deploy_name列表
-        """
+
+    async def refresh_pool(self, active_models: Optional[List[Model]] = None) -> Dict[str, List[str]]:
+        """刷新模型池"""
         async with self._config.instance_lock:
+            
             # 获取数据库中的所有激活模型
-            active_models = self.model_service.get_active_models()
-            active_models_dict = {model.deploy_name: model for model in active_models}
+            active_models_dict = {
+                model.deploy_name: model for model in active_models}
             active_deploy_names = set(active_models_dict.keys())
             pool_deploy_names = set(self._config.model_instances.keys())
 
@@ -245,21 +207,24 @@ class ModelPool:
                 # 比较配置是否发生变化
                 if (current_config.properties != new_config.properties or
                     current_config.name != new_config.name or
-                    current_config.provider != new_config.provider):
+                        current_config.provider != new_config.provider):
                     # 等待当前任务完成后更新配置
                     semaphore = await self.get_semaphore(deploy_name)
                     async with semaphore:
                         # 更新模型实例和配置
-                        self._config.model_instances[deploy_name] = self._create_model_instance(new_config)
+                        self._config.model_instances[deploy_name] = self._create_model_instance(
+                            new_config)
                         self._config.model_configs[deploy_name] = new_config
                         updated_models.append(deploy_name)
-                        logger.info(f"Updated model configuration: {deploy_name}")
+                        logger.info(
+                            f"Updated model configuration: {deploy_name}")
 
             return {
                 "added": added_models,
                 "removed": removed_models,
                 "updated": updated_models
             }
+
 
     async def get_pool_status(self) -> List[Dict]:
         """获取所有模型池的状态信息"""
@@ -277,6 +242,7 @@ class ModelPool:
             })
         return status
 
+
     @classmethod
     async def cleanup(cls):
         """清理所有资源"""
@@ -291,12 +257,11 @@ class ModelPool:
                 instance_config.model_configs.clear()
                 instance_config.semaphores.clear()
 
-                # 关闭数据库连接
-                cls._instance.close_db()
-
                 logger.info("Cleaned up all model pool resources")
                 cls._initialized = False
                 cls._instance = None
+
+    # -------------------------------------- create model releated -------------------------------------
 
     def _create_model_instance(self, model: Model) -> BaseChatModel:
         """根据模型配置创建新的模型实例"""
@@ -306,6 +271,7 @@ class ModelPool:
             return self._create_azure_openai_instance(model)
         raise ValueError(f"Unsupported model provider: {model.provider}")
 
+
     @staticmethod
     def _create_openai_instance(model: Model) -> BaseChatModel:
         """创建OpenAI模型实例"""
@@ -314,6 +280,7 @@ class ModelPool:
             api_key=model.properties.get('api_key'),
             base_url=model.properties.get('base_url'),
         )
+
 
     @staticmethod
     def _create_azure_openai_instance(model: Model) -> BaseChatModel:

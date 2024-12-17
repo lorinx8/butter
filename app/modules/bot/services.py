@@ -12,6 +12,9 @@ class BotService:
     def __init__(self, bot_repository: BotRepository):
         self.bot_repository = bot_repository
 
+    def get_all(self) -> List[Bot]:
+        return self.bot_repository.get_all()
+
     def create_bot(self, bot_data: BotStandardCreate) -> Bot:
         # 检查code是否已存在
         if (not bot_data.code and not len(bot_data.code) == 0) and self.bot_repository.get_by_code(bot_data.code):
@@ -36,6 +39,12 @@ class BotService:
 
     def get_bot(self, bot_id: str) -> Bot:
         bot = self.bot_repository.get_by_id(bot_id)
+        if not bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+        return bot
+    
+    def get_bot_by_code(self, bot_code: str) -> Bot:
+        bot = self.bot_repository.get_by_code(bot_code)
         if not bot:
             raise HTTPException(status_code=404, detail="Bot not found")
         return bot

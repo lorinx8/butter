@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from app.core.logging import logger
 from sqlalchemy.orm import Session
 
 from app.core.auth.security import verify_token
@@ -28,8 +29,10 @@ async def create_model(
         model = model_service.create_model(model_data)
         return success_response(data=model, message="Model created successfully")
     except ValueError as e:
+        logger.error(e)
         return error_response(ErrorCode.INVALID_PARAMS, str(e))
     except Exception as e:
+        logger.error(e)
         return error_response(ErrorCode.UNKNOWN_ERROR, str(e))
 
 

@@ -3,23 +3,24 @@ from typing import Optional
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START
 from langchain_core.messages import HumanMessage, SystemMessage, trim_messages
-from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg import AsyncConnection
 import json
 from app.core.config import settings
+from app.modules.bot.business.bot_db_pool import BotDatabasePool
 
 
 @dataclass
-class BotConfig:
+class StandardBotConfig:
     """标准机器人配置"""
     bot_code: str                               # 智能体标识
     bot_name: str                               # 智能体名称
+    bot_version: str                            # 智能体版本
     deploy_name: str                            # 模型部署标识
     provider_code: str                          # 模型提供方标识
-    prompt_template: str                        # 提示词模板内容
     model_properties: dict                      # 模型配置
     memory_enable: bool = False                 # 是否启用记忆
+    prompt_template: Optional[str] = None  # 提示词模板内容
     memory_strategy: Optional[str] = None       # 记忆策略 (tokens/messages)
     memory_max_tokens: Optional[int] = None     # 最大token数
     memory_max_rounds: Optional[int] = None     # 最大消息轮数
@@ -30,8 +31,9 @@ class BotConfig:
 class BotStandard:
     """标准机器人实现"""
 
-    def __init__(self, config: BotConfig):
+    def __init__(self, config: StandardBotConfig):
         # 配置信息
+        self.workflow = None
         self.config = config
         self.bot_name = config.bot_name
 
@@ -41,16 +43,14 @@ class BotStandard:
         self.conn = None
         self.model = self._create_model()
 
+
+
     async def initialize(self):
         """异步初始化"""
         if self.config.memory_enable:
-            # 初始化数据库连接
-            connection_kwargs = {
-                "autocommit": True,
-                "prepare_threshold": 0,
-            }
-            self.conn = await AsyncConnection.connect(settings.DATABASE_URI, **connection_kwargs)
-            self.checkpoint = AsyncPostgresSaver(self.conn)
+            # 使用连接池创建 checkpoint
+            pool = await BotDatabasePool.get_pool()
+            self.checkpoint = AsyncPostgresSaver(pool)
             await self.checkpoint.setup()
 
         # langgraph

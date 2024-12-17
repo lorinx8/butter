@@ -1,18 +1,21 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.docs.templates import ElementsHtml
-from app.core.exceptions.handlers import http_exception_handler, general_exception_handler
+from app.core.exceptions.butter_exception import ButterException
+from app.core.exceptions.handlers import http_exception_handler, general_exception_handler, business_exception_handler
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.admin import routes as admin_routes
 from app.api.common import routes as common_routes
 from app.core.database.db_base import init_db
 from app.core.middleware.access_log import access_log_middleware
+from app.modules.bot.business.bot_db_pool import BotDatabasePool
 from app.modules.bot.business.bot_manager import BotManager
+from app.modules.llm.business.model_manager import ModelManager
 from app.modules.llm.business.model_pool import ModelPool
 
 env = os.getenv("ENV")
@@ -30,7 +33,9 @@ async def lifespan(fastapi_app: FastAPI):
     # Startup
     logger.info("Application startup")
     await init_db()
-    await ModelPool.initialize()
+
+    # 初始化池
+    await ModelManager.initialize()
     await BotManager.initialize()
 
     yield
@@ -50,7 +55,9 @@ app = FastAPI(
 
 # 添加异常处理器
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(FastAPIHTTPException, http_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
+app.add_exception_handler(ButterException, business_exception_handler)
 
 # 添加 CORS 中间件配置
 app.add_middleware(

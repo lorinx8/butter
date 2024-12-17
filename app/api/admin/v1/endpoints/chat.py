@@ -65,7 +65,7 @@ async def bot_chat(
         async def generate():
             # 先获取异步迭代器
             chat_iterator = await BotChat.chat(
-                request.bot_id,
+                request.bot_code,
                 session_id=request.session_id,
                 messages=request.messages,
                 stream=True
@@ -76,7 +76,7 @@ async def bot_chat(
         return StreamingResponse(generate(), media_type="text/event-stream")
     else:
         response = await BotChat.chat(
-            request.bot_id,
+            request.bot_code,
             request.session_id,
             request.messages,
             stream=False

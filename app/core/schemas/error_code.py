@@ -23,3 +23,5 @@ class ErrorCode(Enum):
     INTERNAL_SERVER_ERROR = 9500
     
     # 其他业务错误可以继续添加...
+    MODEL_NOT_FOUND = 10001
+    MODEL_ALREADY_EXISTS = 10002
