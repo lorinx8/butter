@@ -48,12 +48,11 @@ class BotPool:
                 cls._initialized = True
             return cls._instance
 
-
     async def initialize_pools(self, bot_configs: Optional[List[StandardBotConfig]] = None):
         for bot_config in bot_configs or []:
-            logger.info(f"Loading bot: {bot_config.bot_code} - {bot_config.bot_name}")
+            logger.info(
+                f"Loading bot: {bot_config.bot_code} - {bot_config.bot_name}")
             await self.add_bot(bot_config)
-
 
     @classmethod
     async def get_instance(cls) -> 'BotPool':
@@ -63,26 +62,21 @@ class BotPool:
                 "BotPool not initialized. Call initialize() first")
         return cls._instance
 
-
     def get_config(self) -> BotPoolConfig:
         """获取机器人池配置"""
         return self._config
-
 
     def get_bot_instance(self, bot_code: str) -> Optional[BotStandard]:
         """获取机器人实例"""
         return self._config.bot_instances.get(bot_code)
 
-
     def has_bot(self, bot_code: str) -> bool:
         """检查机器人是否在池中"""
         return bot_code in self._config.bot_instances
 
-
     async def get_semaphore(self, bot_code: str) -> Optional[asyncio.Semaphore]:
         """获取机器人的信号量"""
         return self._config.semaphores.get(bot_code)
-
 
     @asynccontextmanager
     async def get_bot(self, bot_code: str):
@@ -99,18 +93,22 @@ class BotPool:
         finally:
             pass
 
-
     async def add_bot(self, bot_config: StandardBotConfig):
         """添加机器人到池中"""
+        # 先初始化bot实例
+        bot_instance = await _initialize_standard_bot(bot_config)
+
+        # 再获取锁添加到池中
         async with self._config.instance_lock:
             bot_code = bot_config.bot_code
             if not self.has_bot(bot_code):
-                bot_instance = await _initialize_standard_bot(bot_config)
                 self._config.bot_instances[bot_code] = bot_instance
                 self._config.semaphores[bot_code] = asyncio.Semaphore(
                     self.DEFAULT_POOL_SIZE)
                 logger.info(f"Added bot to pool: {bot_code}")
-
+            else:
+                # 如果已存在，清理刚创建的实例
+                await bot_instance.cleanup()
 
     async def remove_bot(self, bot_code: str):
         """从池中移除机器人"""
@@ -128,7 +126,6 @@ class BotPool:
                     self._config.semaphores.pop(bot_code)
                     logger.info(f"Removed bot from pool: {bot_code}")
 
-
     async def get_pool_status(self) -> List[Dict]:
         """获取所有机器人池的状态信息"""
         status = []
@@ -143,7 +140,6 @@ class BotPool:
                 'available_slots': available_slots
             })
         return status
-
 
     @classmethod
     async def cleanup(cls):
