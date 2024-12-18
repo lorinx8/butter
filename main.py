@@ -19,6 +19,7 @@ from app.modules.llm.business.model_manager import ModelManager
 from app.modules.llm.business.model_pool import ModelPool
 
 env = os.getenv("ENV")
+force_docs = bool(os.getenv("FORCE_DOCS"))
 env_is_production = env != "local"
 
 # 检查数据库配置
@@ -50,7 +51,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
-    openapi_url="/openapi.json" if not env_is_production else None
+    openapi_url="/openapi.json" if not env_is_production or force_docs else None
 )
 
 # 添加异常处理器
@@ -75,7 +76,7 @@ app.middleware("http")(access_log_middleware)
 app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR)
 app.include_router(common_routes.router, prefix=settings.COMMON_API_V1_STR)
 
-if not env_is_production:
+if not env_is_production or force_docs:
     @app.get("/docs", response_class=HTMLResponse)
     async def api_docs():
         return ElementsHtml.BASIC

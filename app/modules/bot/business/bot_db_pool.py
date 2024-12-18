@@ -14,6 +14,7 @@ class BotDatabasePool:
             cls._pool = AsyncConnectionPool(
                 conninfo=settings.DATABASE_URI,
                 max_size=20,  # 根据需求调整
+                open=False,
                 kwargs={
                     "autocommit": True,
                     "prepare_threshold": 0,
