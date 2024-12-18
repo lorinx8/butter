@@ -11,13 +11,15 @@ class BotRepository:
 
     def create(self, code: str, name: str, bot_type: str,
                properties: Optional[dict] = None,
-               description: Optional[str] = None) -> Bot:
+               description: Optional[str] = None,
+               version: Optional[str] = None) -> Bot:
         db_bot = Bot(
             code=code,
             name=name,
             bot_type=bot_type,
             properties=properties,
-            description=description
+            description=description,
+            version=version
         )
         self.db.add(db_bot)
         self.db.commit()

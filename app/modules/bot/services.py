@@ -34,7 +34,8 @@ class BotService:
             name=bot_data.name,
             bot_type=bot_data.bot_type,
             properties=bot_data.properties.model_dump(),
-            description=bot_data.description
+            description=bot_data.description,
+            version=bot_data.version
         )
 
     def get_bot(self, bot_id: str) -> Bot:
@@ -42,7 +43,7 @@ class BotService:
         if not bot:
             raise HTTPException(status_code=404, detail="Bot not found")
         return bot
-    
+
     def get_bot_by_code(self, bot_code: str) -> Bot:
         bot = self.bot_repository.get_by_code(bot_code)
         if not bot:

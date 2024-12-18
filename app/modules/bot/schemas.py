@@ -30,6 +30,7 @@ class BotUpdate(BaseModel):
     bot_type: Optional[str] = None
     properties: Optional[Dict] = None
     description: Optional[str] = None
+    version: Optional[str] = None
 
 
 class BotInDB(BotBase):
