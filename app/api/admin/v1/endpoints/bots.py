@@ -17,18 +17,14 @@ def get_bot_service(db: Session = Depends(get_db)):
     return BotService(BotRepository(db))
 
 
-async def get_bot_manager():
-    return await BotManager.get_instance()
-
-
 @router.post("/bots-standard")
 async def create_bot_standard(
     bot_data: BotStandardCreate,
     _: dict = Depends(verify_token),
-    bot_manager: BotManager = Depends(get_bot_manager)
+    bot_service: BotService = Depends(get_bot_service)
 ):
     try:
-        bot = bot_manager.create_standard_bot(bot_data)
+        bot = bot_service.create_bot(bot_data)
         return success_response(data=bot, message="Bot created successfully")
     except ValueError as e:
         return error_response(ErrorCode.INVALID_PARAMS, str(e))

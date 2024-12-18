@@ -83,6 +83,7 @@ CREATE TABLE "public"."bot" (
   "bot_type" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
   "properties" jsonb,
   "description" text COLLATE "pg_catalog"."default",
+  "version" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT 'version1',
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "created_at" timestamptz(6) NOT NULL DEFAULT now(),
   "updated_at" timestamptz(6)
