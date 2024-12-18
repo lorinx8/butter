@@ -10,6 +10,7 @@ from app.core.exceptions.handlers import http_exception_handler, general_excepti
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.admin import routes as admin_routes
+from app.api.app import routes as app_routes
 from app.api.common import routes as common_routes
 from app.core.database.db_base import init_db
 from app.core.middleware.access_log import access_log_middleware
@@ -74,6 +75,7 @@ app.middleware("http")(access_log_middleware)
 
 # 包含路由
 app.include_router(admin_routes.router, prefix=settings.ADMIN_API_V1_STR)
+app.include_router(app_routes.router, prefix=settings.APP_API_V1_STR)
 app.include_router(common_routes.router, prefix=settings.COMMON_API_V1_STR)
 
 if not env_is_production or force_docs:

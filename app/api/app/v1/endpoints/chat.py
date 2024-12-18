@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 @file: chat.py
-@brief: 管理员聊天API端点
+@brief: 聊天API端点
 @details:
-    - 提供管理员级别的模型调用接口
+    - 提供模型及智能体调用接口
     - 支持流式和非流式输出
-    - 直接调用底层模型，不经过提示词处理
 @date: 2024-11-23
 @author: bukp
 @version: 1.0
@@ -30,7 +29,7 @@ async def chat(
     _: dict = Depends(verify_token),  # Ensure admin access
 ):
     """
-    管理员聊天接口
+    聊天接口
     - 直接调用底层模型，不经过提示词处理
     - 支持流式和非流式输出
     """
@@ -59,7 +58,9 @@ async def bot_chat(
     _: dict = Depends(verify_token),
 ):
     """
-    机器人流式聊天接口
+    智能体聊天接口
+    - 具备内置提示提、工具调用、历史记忆功能
+    - 支持流式和非流式输出
     """
     if request.stream:
         async def generate():
