@@ -20,7 +20,7 @@ class StandardBotConfig:
     provider_code: str                          # 模型提供方标识
     model_properties: dict                      # 模型配置
     memory_enable: bool = False                 # 是否启用记忆
-    prompt_template: Optional[str] = None  # 提示词模板内容
+    prompt_template: Optional[str] = None       # 提示词模板内容
     memory_strategy: Optional[str] = None       # 记忆策略 (tokens/messages)
     memory_max_tokens: Optional[int] = None     # 最大token数
     memory_max_rounds: Optional[int] = None     # 最大消息轮数
@@ -134,9 +134,14 @@ class BotStandard:
 
         return messages
 
-    async def chat(self, session_id: str, message_content: str) -> str:
+    async def chat(self, session_id: str, message_content: str, image_url: str = None) -> str:
         """同步聊天"""
-        input_message = HumanMessage(content=message_content)
+        if image_url:
+            input_message = HumanMessage(content=[
+                {"type": "text", "text": message_content}, 
+                {"type": "image_url", "image_url": {"url": image_url}}])
+        else:
+            input_message = HumanMessage(content=message_content)
         config = {
             "configurable": {"thread_id": session_id}
         }
@@ -144,9 +149,14 @@ class BotStandard:
             {"messages": input_message}, config=config)
         return final_state["messages"][-1].content
 
-    async def chat_stream(self, session_id: str, message_content: str):
+    async def chat_stream(self, session_id: str, message_content: str, image_url: str = None):
         """流式聊天"""
-        input_message = HumanMessage(content=message_content)
+        if image_url:
+            input_message = HumanMessage(content=[
+                {"type": "text", "text": message_content}, 
+                {"type": "image_url", "image_url": {"url": image_url}}])
+        else:
+            input_message = HumanMessage(content=message_content)
         config = {
             "configurable": {"thread_id": session_id}
         }

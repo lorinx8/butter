@@ -69,6 +69,7 @@ async def bot_chat(
                 request.bot_code,
                 session_id=request.session_id,
                 messages=request.messages,
+                image_url=request.image_url,
                 stream=True
             )
             # 对迭代器进行迭代
@@ -80,6 +81,7 @@ async def bot_chat(
             request.bot_code,
             request.session_id,
             request.messages,
+            image_url=request.image_url,
             stream=False
         )
         return success_response(data={"message": response})

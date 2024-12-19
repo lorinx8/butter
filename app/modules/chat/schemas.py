@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pydantic import BaseModel
 
 
@@ -14,4 +14,5 @@ class BotChatRequest(BaseModel):
     bot_code: str
     session_id: str
     messages: str
+    image_url : Optional[str] = None
     stream: bool = False
