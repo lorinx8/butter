@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from uuid import UUID
+from langgraph.graph import message
 from pydantic import BaseModel, Field
 
 
@@ -20,9 +21,12 @@ class ChatHistoryCreate(BaseModel):
     image_url: Optional[str] = None
 
 
-class ChatHistoryResponse(ChatHistoryCreate):
-    """Schema for chat history response"""
-    id: UUID  # 修改为 UUID 类型
+class ChatHistoryMessage(BaseModel):
+    id: UUID
+    sender: SenderType
+    content: Optional[str] = None
+    image_url: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.now)  # 使用本地时间
 
     class Config:
         from_attributes = True
@@ -30,7 +34,9 @@ class ChatHistoryResponse(ChatHistoryCreate):
 
 class ChatHistoryQuery(BaseModel):
     """Schema for querying chat history"""
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    limit: Optional[int] = None
-    session_id: Optional[str] = None
+    latest_datetime: Optional[datetime] = None
+    limit: int = 20
+    session_id: str
+
+    class Config:
+        from_attributes = True

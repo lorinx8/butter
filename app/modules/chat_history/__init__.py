@@ -1,4 +1,5 @@
 from .services import ChatHistoryService
-from .schemas import ChatHistoryCreate, ChatHistoryResponse, ChatHistoryQuery
+from .schemas import ChatHistoryCreate, ChatHistoryMessage, ChatHistoryQuery
 
-__all__ = ["ChatHistoryService", "ChatHistoryCreate", "ChatHistoryResponse", "ChatHistoryQuery"]
+__all__ = ["ChatHistoryService", "ChatHistoryCreate",
+           "ChatHistoryMessage", "ChatHistoryQuery"]
