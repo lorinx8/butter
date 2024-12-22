@@ -148,3 +148,9 @@ VALUES ('prompt-20241126174648-EqSH', '小青同学提示词', '你是一个温�
 1.当初次和用户对话的时候，你会先问用户的姓名和称呼，以便以后使用。
 2.你只使用中文来作答，并且是口语化、生活化的语句，给出建议的时候，不能机械地罗列第一点、第二点、第三点等。不能输出带有格式标记的文字，例如Markdown。
 3.在聊天过程中，不能总是重复说：“有什么需要随时可以和我聊”、“有没有什么想和我聊聊的”，或者类似意思的话。', '小青同学提示词1126', 't');
+
+-- ----------------------------
+-- Records of bot
+-- ----------------------------
+INSERT INTO "public"."bot" ("code", "name", "bot_type", "properties", "description", "version") 
+    VALUES ('bot-20241216211612-OPbe', '陪护小青', 'standard', '{"max_tokens": 64000, "memory_enable": true, "memory_strategy": "tokens", "max_message_rounds": null, "models_deploy_name": "openai-gpt-4o", "models_prompt_code": "prompt-20241126174648-EqSH"}', '测试小青BOT', 'version1');

@@ -186,3 +186,121 @@ CREATE TABLE "public"."prompt" (
 
 ALTER TABLE "public"."prompt" ADD CONSTRAINT "prompt_code_key" UNIQUE ("code");
 ALTER TABLE "public"."prompt" ADD CONSTRAINT "prompt_pkey" PRIMARY KEY ("id");
+
+-- ########################################################################################################################################################
+-- start of chat history
+/*
+ Table: chat_histories
+*/
+-- 创建 sender_type 枚举类型
+CREATE TYPE sender_type AS ENUM ('USER', 'AI');
+
+DROP TABLE IF EXISTS chat_histories;
+-- 创建分区表
+CREATE TABLE chat_histories (
+    id uuid DEFAULT gen_random_uuid(),
+    timestamp TIMESTAMP NOT NULL,
+    sender sender_type NOT NULL,
+    session_id VARCHAR NOT NULL,
+    content TEXT,
+    bot_code VARCHAR NOT NULL,
+    image_url VARCHAR,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    PRIMARY KEY (id, timestamp)
+) PARTITION BY RANGE (timestamp);
+
+-- 创建分区表维护函数
+CREATE OR REPLACE FUNCTION create_chat_history_partition()
+RETURNS void AS $$
+DECLARE
+    partition_date date;
+    partition_name text;
+    start_date text;
+    end_date text;
+BEGIN
+    -- 获取下个月的日期
+    partition_date := date_trunc('month', current_date + interval '1 month');
+    
+    -- 构造分区名称，例如：chat_histories_y2024m03
+    partition_name := 'chat_histories_y' || 
+                     to_char(partition_date, 'YYYY') || 
+                     'm' || 
+                     to_char(partition_date, 'MM');
+    
+    -- 构造日期范围
+    start_date := to_char(partition_date, 'YYYY-MM-DD');
+    end_date := to_char(partition_date + interval '1 month', 'YYYY-MM-DD');
+    
+    -- 创建分区
+    EXECUTE format(
+        'CREATE TABLE IF NOT EXISTS %I PARTITION OF chat_histories FOR VALUES FROM (%L) TO (%L)',
+        partition_name,
+        start_date,
+        end_date
+    );
+    
+    RAISE NOTICE 'Created partition % for date range % to %', 
+                 partition_name, start_date, end_date;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 创建初始分区函数
+CREATE OR REPLACE FUNCTION create_initial_partitions()
+RETURNS void AS $$
+DECLARE
+    current_date_var date;
+    partition_name text;
+    start_date text;
+    end_date text;
+BEGIN
+    -- 从当前月开始，创建未来3个月的分区
+    FOR i IN 0..2 LOOP
+        current_date_var := date_trunc('month', current_date + (i || ' month')::interval);
+        
+        partition_name := 'chat_histories_y' || 
+                         to_char(current_date_var, 'YYYY') || 
+                         'm' || 
+                         to_char(current_date_var, 'MM');
+        
+        start_date := to_char(current_date_var, 'YYYY-MM-DD');
+        end_date := to_char(current_date_var + interval '1 month', 'YYYY-MM-DD');
+        
+        EXECUTE format(
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF chat_histories FOR VALUES FROM (%L) TO (%L)',
+            partition_name,
+            start_date,
+            end_date
+        );
+        
+        RAISE NOTICE 'Created initial partition % for date range % to %', 
+                     partition_name, start_date, end_date;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 创建触发器，每月自动创建新分区
+CREATE OR REPLACE FUNCTION create_partition_trigger()
+RETURNS trigger AS $$
+BEGIN
+    PERFORM create_chat_history_partition();
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER create_new_partition_trigger
+    AFTER INSERT ON chat_histories
+    EXECUTE PROCEDURE create_partition_trigger();
+
+-- 创建索引
+-- 复合索引：用于时间范围查询和按会话查询
+CREATE INDEX ix_chat_histories_timestamp_session ON chat_histories (timestamp, session_id);
+-- 会话ID索引：用于按会话查询
+CREATE INDEX ix_chat_histories_session_id ON chat_histories (session_id);
+-- 时间戳索引：用于时间范围查询
+CREATE INDEX ix_chat_histories_timestamp ON chat_histories (timestamp DESC);
+
+-- 初始创建分区（当前月份和未来两个月）
+SELECT create_initial_partitions();
+
+-- ########################################################################################################################################################
