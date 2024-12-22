@@ -153,4 +153,4 @@ VALUES ('prompt-20241126174648-EqSH', '小青同学提示词', '你是一个温�
 -- Records of bot
 -- ----------------------------
 INSERT INTO "public"."bot" ("code", "name", "bot_type", "properties", "description", "version") 
-    VALUES ('bot-20241216211612-OPbe', '陪护小青', 'standard', '{"max_tokens": 64000, "memory_enable": true, "memory_strategy": "tokens", "max_message_rounds": null, "models_deploy_name": "openai-gpt-4o", "models_prompt_code": "prompt-20241126174648-EqSH"}', '测试小青BOT', 'version1');
+    VALUES ('bot-20241218110617-KVLU', '陪护小青', 'standard', '{"max_tokens": 64000, "memory_enable": true, "memory_strategy": "tokens", "max_message_rounds": null, "models_deploy_name": "openai-gpt-4o", "models_prompt_code": "prompt-20241126174648-EqSH"}', '测试小青BOT', 'version1');
