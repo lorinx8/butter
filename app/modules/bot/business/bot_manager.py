@@ -4,7 +4,6 @@ from fastapi import Depends
 from contextlib import asynccontextmanager
 
 from sqlalchemy.orm import Session
-from sqlalchemy.util import b
 
 from app.core.database.db_base import SessionLocal, get_db
 from app.core.logging import logger
