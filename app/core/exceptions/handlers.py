@@ -39,7 +39,7 @@ async def http_exception_handler(request: Request, exc: Union[StarletteHTTPExcep
     return JSONResponse(
         status_code=exc.status_code,
         content=error_response(
-            error_code=error_code.code,
+            error_code=error_code,
             message=exc.detail if hasattr(exc, 'detail') else str(exc)
         )
     )
