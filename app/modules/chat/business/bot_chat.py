@@ -1,4 +1,4 @@
-from typing import Union, AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import logger
 from app.modules.bot.business.bot_manager import BotManager
@@ -65,8 +65,7 @@ class BotChat:
             await history.save_user_message(messages, image_url)
 
             # 执行聊天
-            bot_manager = await BotManager.get_instance()
-            async with bot_manager.get_bot_instance(bot_code) as bot:
+            async with BotManager.get_bot(bot_code) as bot:
                 # 用于收集AI的完整响应
                 response_contents = []
                 try:
@@ -120,8 +119,7 @@ class BotChat:
             await history.save_user_message(messages, image_url)
 
             # 执行聊天
-            bot_manager = await BotManager.get_instance()
-            async with bot_manager.get_bot_instance(bot_code) as bot:
+            async with BotManager.get_bot(bot_code) as bot:
                 response = await bot.chat(session_id, messages, image_url)
                 
                 # 保存AI响应

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database.db_base import get_async_db
 from app.core.auth.security import verify_token
-from app.core.schemas.error_code import ErrorCode
+from app.core.exceptions.error_code import ErrorCode
 from app.core.schemas.response import error_response, success_response
 from app.modules.chat_history.repositories import ChatHistoryRepository
 from app.modules.chat_history.services import ChatHistoryService

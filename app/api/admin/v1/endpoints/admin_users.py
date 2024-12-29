@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth.security import verify_token
 from app.core.database.db_base import get_db
-from app.core.schemas.error_code import ErrorCode
+from app.core.exceptions.error_code import ErrorCode
 from app.core.schemas.response import success_response, error_response
 
 from app.modules.auth.repositories import AdminUserRepository
