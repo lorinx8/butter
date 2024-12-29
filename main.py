@@ -14,10 +14,8 @@ from app.api.app import routes as app_routes
 from app.api.common import routes as common_routes
 from app.core.database.db_base import init_db
 from app.core.middleware.access_log import access_log_middleware
-from app.modules.bot.business.bot_db_pool import BotDatabasePool
 from app.modules.bot.business.bot_manager import BotManager
 from app.modules.llm.business.model_manager import ModelManager
-from app.modules.llm.business.model_pool import ModelPool
 
 env = os.getenv("ENV")
 force_docs = bool(os.getenv("FORCE_DOCS"))
@@ -33,17 +31,20 @@ logger = setup_logging()
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
     # Startup
-    logger.info("Application startup")
+    logger.info("[main] Application startup.")
+    logger.info("[main] Init db...")
     await init_db()
 
     # 初始化池
+    logger.info("[main] Init model manager...")
     await ModelManager.initialize()
+    logger.info("[main] Init bot manager...")
     await BotManager.initialize()
 
     yield
 
     # Shutdown
-    await ModelPool.cleanup()
+    await ModelManager.cleanup()
     await BotManager.cleanup()
     logger.info("Application shutdown")
 

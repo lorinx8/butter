@@ -86,19 +86,6 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = str(
         safe_int(get_yaml_value(_yaml_config, 'database', 'port'), 5432))
 
-    # OpenAI Settings
-    OPENAI_API_KEY: Optional[str] = get_yaml_value(
-        _yaml_config, 'openai', 'api_key')
-    OPENAI_BASE_URL: Optional[str] = get_yaml_value(
-        _yaml_config, 'openai', 'base_url')
-    OPENAI_MODEL: str = get_yaml_value(_yaml_config, 'openai', 'model')
-    OPENAI_TEMPERATURE: float = safe_float(
-        get_yaml_value(_yaml_config, 'openai', 'temperature'), 0.0)
-    OPENAI_MAX_TOKENS: int = safe_int(get_yaml_value(
-        _yaml_config, 'openai', 'max_tokens'), 16000)
-    OPENAI_MAX_RETRIES: int = safe_int(get_yaml_value(
-        _yaml_config, 'openai', 'max_retries'), 2)
-
     @property
     def UVICORN_PORT(self) -> int:
         """获取uvicorn端口"""
