@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Optional
+from app.core.logging import logger
 from pydantic_settings import BaseSettings
 import yaml
 import sys
@@ -114,8 +115,8 @@ class Settings(BaseSettings):
         if env_db_url:
             # 替换协议部分
             return env_db_url.replace("postgresql://", "postgresql+psycopg://", 1)
-
-        return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        url = f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return url
 
     @property
     def DATABASE_URI(self) -> str:
