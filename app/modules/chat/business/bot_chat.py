@@ -63,30 +63,30 @@ class BotChat:
 
             # 保存用户消息
             await history.save_user_message(messages, image_url)
+            bot = await BotManager.get_bot(bot_code)
 
-            # 执行聊天
-            async with BotManager.get_bot(bot_code) as bot:
-                # 用于收集AI的完整响应
-                response_contents = []
-                try:
-                    async for chunk in bot.chat_stream(session_id, messages, image_url):
-                        # 解析JSON获取内容
-                        chunk_data = json.loads(chunk)
-                        content = chunk_data.get("content", "")
+            # 用于收集AI的完整响应
+            response_contents = []
+            try:
+                async for chunk in bot.chat_stream(session_id, messages, image_url):
+                    # 解析JSON获取内容
+                    chunk_data = json.loads(chunk)
+                    content = chunk_data.get("content", "")
 
-                        # 如果不是结束标记，收集内容
-                        if content != "[END]":
-                            response_contents.append(content)
+                    # 如果不是结束标记，收集内容
+                    if content != "[END]":
+                        response_contents.append(content)
 
-                        # 返回原始chunk用于流式输出
-                        yield chunk
+                    # 返回原始chunk用于流式输出
+                    yield chunk
 
-                    # 所有chunk都返回后，保存完整响应
-                    full_response = "".join(response_contents)
-                    await history.save_ai_message(full_response)
-                except Exception as e:
-                    logger.error(f"Error in stream chat: {str(e)}")
-                    raise
+                # 所有chunk都返回后，保存完整响应
+                full_response = "".join(response_contents)
+                await history.save_ai_message(full_response)
+            except Exception as e:
+                logger.error(f"Error in stream chat: {str(e)}")
+                raise
+
         except Exception as e:
             logger.error(f"Error in bot chat stream: {str(e)}")
             raise
