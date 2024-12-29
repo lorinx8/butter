@@ -53,6 +53,7 @@ async def get_async_db():
 
 async def init_db():
     """初始化数据库，创建所有表（如果不存在）"""
+    logger.info("url: ", settings.DATABASE_URL_PSYCOPG)
     logger.info("开始检查数据库表...")
 
     async with async_engine.begin() as conn:
