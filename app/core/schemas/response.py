@@ -13,7 +13,7 @@ class ResponseModel(BaseModel, Generic[T]):
 
 def success_response(data: Any = None, message: str = "Success") -> dict:
     return ResponseModel(
-        code=ErrorCode.SUCCESS.value,
+        code=ErrorCode.SUCCESS.code,
         message=message,
         data=data
     ).model_dump()
@@ -23,7 +23,7 @@ def error_response(error_code: ErrorCode, message: str = None) -> dict:
     if message is None:
         message = error_code.name
     return ResponseModel(
-        code=error_code.value,
+        code=error_code.code,
         message=message,
         data=None
     ).model_dump()
